@@ -55,15 +55,26 @@ class GAN(object):
         return (self.GEN_DEPTH / (2 ** LAYER_COUNTER))
 
     class ModelWarning(Warning):
+        # BUG: warning currently raises exception instead of warning
         """ Class for warnings related to model building and compiling """
         pass
 
     def build_discriminator(self):
         """
-        Builds discriminator architecture without compiling model
+        Builds discriminator architecture without compiling model.
+        Uses functional API to allow for easy insertion of non-sequential
+        elements. If the model has already been build, it is simply returned.
+        Input has the shape of a single image as specified during object
+        initialization. Convolutional layers have a filter number determined
+        by self.dis_get_filter_num(LAYER_COUNTER), use self.STRIDES strides
+        for downsampling, and pad to match input shape. LeakyReLU functions
+        with self.LEAKY_ALPHA alpha are used to give gradients to inactive
+        units and self.DROPOUT dropout is used to prevent overfitting.
+        Final output is the probability that the image is real, according to
+        a single-node, dense layer with sigmoid activation.
         """
         if self.discriminatorStructure:
-            raise ModelWarning('Discriminator has already been built.')
+            raise self.ModelWarning('Discriminator has already been built.')
             return self.discriminatorStructure
         # set up local vars for building
         INPUT_SHAPE     =   (self.rowNum, self.columnNum, self.channelNum)
@@ -124,3 +135,10 @@ class GAN(object):
         discriminatorStructure = Model(inputs=inputs, outputs=outputs)
         self.discriminatorStructure = discriminatorStructure
         return discriminatorStructure
+
+    def build_generator(self):
+        """ Builds generator architecture without compiling model """
+        if self.generatorStructure:
+            raise self.ModelWarning('Generator has already been built.')
+            return self.generatorStructure
+        # set up local vars for building
