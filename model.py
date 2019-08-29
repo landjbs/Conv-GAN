@@ -93,9 +93,9 @@ class GAN(object):
                         strides=STRIDE,
                         input_shape=INPUT_SHAPE,
                         padding='same',
-                        activation=LeakyReLU(RELU_ALPHA),
                         name=f'conv_{LAYER_COUNTER}')(inputs)
-        drop_1 = Dropout(rate=DROPOUT, name=f'drop_{LAYER_COUNTER}')(conv_1)
+        relu_1 = LeakyReLU(RELU_ALPHA, name=f'relu_{LAYER_COUNTER}')(conv_1)
+        drop_1 = Dropout(rate=DROPOUT, name=f'drop_{LAYER_COUNTER}')(relu_1)
         # second conv block
         LAYER_COUNTER += 1
         conv_2 = Conv2D(filters=self.dis_get_filter_num(LAYER_COUNTER),
@@ -103,9 +103,8 @@ class GAN(object):
                         strides=STRIDE,
                         input_shape=INPUT_SHAPE,
                         padding='same',
-                        name=f'conv_{LAYER_COUNTER}')(inputs)
-        relu_2 = Activation(activation=LeakyReLU(RELU_ALPHA),
-                            name=f'relu_{LAYER_COUNTER}')(conv_2)
+                        name=f'conv_{LAYER_COUNTER}')(drop_1)
+        relu_2 = LeakyReLU(RELU_ALPHA, name=f'relu_{LAYER_COUNTER}')(conv_2)
         drop_2 = Dropout(rate=DROPOUT, name=f'drop_{LAYER_COUNTER}')(relu_2)
         # third conv block
         LAYER_COUNTER += 1
@@ -115,8 +114,7 @@ class GAN(object):
                         input_shape=INPUT_SHAPE,
                         padding='same',
                         name=f'conv_{LAYER_COUNTER}')(drop_2)
-        relu_3 = Activation(activation=LeakyReLU(RELU_ALPHA),
-                            name=f'relu_{LAYER_COUNTER}')(conv_3)
+        relu_3 = LeakyReLU(RELU_ALPHA, name=f'relu_{LAYER_COUNTER}')(conv_3)
         drop_3 = Dropout(rate=DROPOUT, name=f'drop_{LAYER_COUNTER}')(relu_3)
         # fourth conv block
         LAYER_COUNTER += 1
@@ -126,8 +124,7 @@ class GAN(object):
                         input_shape=INPUT_SHAPE,
                         padding='same',
                         name=f'conv_{LAYER_COUNTER}')(drop_3)
-        relu_4 = Activation(activation=LeakyReLU(RELU_ALPHA),
-                            name=f'relu_{LAYER_COUNTER}')(conv_4)
+        relu_4 = LeakyReLU(RELU_ALPHA, name=f'relu_{LAYER_COUNTER}')(conv_4)
         drop_4 = Dropout(rate=DROPOUT, name=f'drop_{LAYER_COUNTER}')(relu_4)
         # convolutional output is flattened and passed to dense classifier
         flat = Flatten(name='flat')(drop_4)
