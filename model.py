@@ -29,19 +29,21 @@ conv_2 = keras.layers.Conv2D(filters=(DEPTH*2), kernel_size=KERNEL_SIZE,
                             activation=keras.layers.LeakyReLU(RELU_ALPHA),
                             padding='same',
                             name='conv_2')(drop_1)
-drop_2 = keras.layers.Dropout(DROPOUT)(conv_2)
+relu_2 = keras.layers.Activation(keras.layers.LeakyReLU(RELU_ALPHA))(conv_2)
+drop_2 = keras.layers.Dropout(DROPOUT)(relu_2)
 # third conv block
 conv_3 = keras.layers.Conv2D(filters=(DEPTH*4), kernel_size=KERNEL_SIZE,
                             strides=STRIDE,
-                            activation=keras.layers.LeakyReLU(RELU_ALPHA),
                             padding='same')(drop_2)
-drop_3 = keras.layers.Dropout(DROPOUT)(conv_3)
+relu_3 = keras.layers.Activation(keras.layers.LeakyReLU(RELU_ALPHA))(conv_3)
+drop_3 = keras.layers.Dropout(DROPOUT)(relu_3)
 # fourth conv block
 conv_4 = keras.layers.Conv2D(filters=(DEPTH*8), kernel_size=KERNEL_SIZE,
                             strides=STRIDE,
                             activation=keras.layers.LeakyReLU(RELU_ALPHA),
                             padding='same')(drop_3)
-drop_4 = keras.layers.Dropout(DROPOUT)(conv_4)
+relu_4 = keras.layers.Activation(keras.layers.LeakyReLU(RELU_ALPHA))(conv_4)
+drop_4 = keras.layers.Dropout(DROPOUT)(relu_4)
 # convolutional output is flattened and passed to dense layer for classification
 flat = keras.layers.Flatten()(drop_4)
 outputs = keras.layers.Dense(units=1, activation='sigmoid')(flat)
