@@ -6,7 +6,9 @@ Implements base model class for deep convolutional adversarial network
 #     """ Helper to assert proper typing of function inputs """
 #     assert isinstance(obj, expectedType), f'{name} expected type {expectedType}, but found type {type{obj}}'
 
-from keras.layers import Input, Conv2D, Activation, LeakyReLU, Dropout, Flatten, Dense
+from keras.layers import (Input, Conv2D, Activation, LeakyReLU, Dropout,
+                            Flatten, Dense, BatchNormalization, ReLU,
+                            UpSampling2D)
 from keras.models import Model
 
 class GAN(object):
@@ -91,10 +93,9 @@ class GAN(object):
                         strides=STRIDE,
                         input_shape=INPUT_SHAPE,
                         padding='same',
+                        activation=LeakyReLU(RELU_ALPHA),
                         name=f'conv_{LAYER_COUNTER}')(inputs)
-        relu_1 = Activation(activation=LeakyReLU(RELU_ALPHA),
-                            name=f'relu_{LAYER_COUNTER}')(conv_1)
-        drop_1 = Dropout(rate=DROPOUT, name=f'drop_{LAYER_COUNTER}')(relu_1)
+        drop_1 = Dropout(rate=DROPOUT, name=f'drop_{LAYER_COUNTER}')(conv_1)
         # second conv block
         LAYER_COUNTER += 1
         conv_2 = Conv2D(filters=self.dis_get_filter_num(LAYER_COUNTER),
@@ -142,3 +143,22 @@ class GAN(object):
             raise self.ModelWarning('Generator has already been built.')
             return self.generatorStructure
         # set up local vars for building
+        LATENT_DIMS     =   self.LATENT_DIMS
+        KERNEL_SIZE     =   self.KERNEL_SIZE
+        DROPOUT         =   self.DROPOUT
+        NORM_MOMENTUM   =   self.NORM_MOMENTUM
+        # # TEMP: Find out if better params exist
+        GEN_DEPTH       =   (self.DIS_DEPTH * 4)
+        GEN_DIM         =   7
+        LAYER_COUNTER   =   1
+        ## generator architecture ##
+        latent_inputs = Input(shape=(LATENT_DIMS, ), name='latent_inputs')
+        # dense layer to adjust and norm latent space
+        dense_latent = Dense(units=((GEN_DIM**2) * GEN_DEPTH),
+                            input_dim=GEN_INPUT_DIM,
+                            name='latent_dense')(latent_inputs)
+        batch_dense = BatchNormalization(momentum=NORM_MOMENTUM,
+                                        name='batch_dense')(dense_latent)
+        relu_dense = Activation(activation='relu', name='relu_dense')(batch_dense)
+        # first upsampling block
+        upsample_1 = UpSampling2D(filters)
