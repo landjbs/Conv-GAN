@@ -8,8 +8,10 @@ Implements base model class for deep convolutional adversarial network
 
 from keras.layers import (Input, Conv2D, Activation, LeakyReLU, Dropout,
                             Flatten, Dense, BatchNormalization, ReLU,
-                            UpSampling2D)
+                            UpSampling2D, Conv2DTranspose, Reshape, Sigmoid)
 from keras.models import Model
+
+import keras
 
 class GAN(object):
 
@@ -19,6 +21,7 @@ class GAN(object):
         self.rowNum     =   rowNum
         self.columnNum  =   columnNum
         self.channelNum =   channelNum
+        self.imageShape =   (rowNum, columnNum, channelNum)
         # model structures
         self.discriminatorStructure =   None
         self.generatorStructure     =   None
@@ -79,7 +82,7 @@ class GAN(object):
             raise self.ModelWarning('Discriminator has already been built.')
             return self.discriminatorStructure
         # set up local vars for building
-        INPUT_SHAPE     =   (self.rowNum, self.columnNum, self.channelNum)
+        INPUT_SHAPE     =   self.imageShape
         KERNEL_SIZE     =   self.KERNEL_SIZE
         STRIDE          =   self.STRIDE
         DROPOUT         =   self.DROPOUT
@@ -131,6 +134,7 @@ class GAN(object):
         outputs = Dense(units=1, activation='sigmoid', name='outputs')(flat)
         # build sequential model
         discriminatorStructure = Model(inputs=inputs, outputs=outputs)
+        print(discriminatorStructure.summary())
         self.discriminatorStructure = discriminatorStructure
         return discriminatorStructure
 
@@ -140,6 +144,7 @@ class GAN(object):
             raise self.ModelWarning('Generator has already been built.')
             return self.generatorStructure
         # set up local vars for building
+        OUTPUT_SHAPE    =   self.imageShape
         LATENT_DIMS     =   self.LATENT_DIMS
         KERNEL_SIZE     =   self.KERNEL_SIZE
         DROPOUT         =   self.DROPOUT
@@ -153,9 +158,52 @@ class GAN(object):
         # dense layer to adjust and norm latent space
         dense_latent = Dense(units=((GEN_DIM**2) * GEN_DEPTH),
                             input_dim=GEN_INPUT_DIM,
-                            name='latent_dense')(latent_inputs)
-        batch_dense = BatchNormalization(momentum=NORM_MOMENTUM,
-                                        name='batch_dense')(dense_latent)
-        relu_dense = Activation(activation='relu', name='relu_dense')(batch_dense)
+                            name='dense_latent')(latent_inputs)
+        batch_latent = BatchNormalization(momentum=NORM_MOMENTUM,
+                                        name='batch_latent')(dense_latent)
+        relu_latent = ReLU(name='relu_latent')(batch_latent)
+        # reshape latent dims into image shape matrix
+        reshaped_latent = Reshape(target_shape=OUTPUT_SHAPE,
+                                name='reshaped_latent')(relu_latent)
+        dropout_latent = Dropout(rate=DROPOUT,
+                                name='dropout_latent')(reshaped_latent)
         # first upsampling block
-        upsample_1 = UpSampling2D(filters)
+        upsample_1 = UpSampling2D(name=f'upsample_{LAYER_COUNTER}')(dropout_latent)
+        transpose_1 = Conv2DTranspose(filters=self.gen_get_filter_num(LAYER_COUNTER),
+                                    kernel_size=KERNEL_SIZE,
+                                    padding='same',
+                                    name=f'transpose_{LAYER_COUNTER}')(upsample_1)
+        batch_1 = BatchNormalization(momentum=NORM_MOMENTUM,
+                                    name=f'batch_{LAYER_COUNTER}')(transpose_1)
+        relu_1 = ReLU(name=f'relu_{LAYER_COUNTER}')(batch_1)
+        # second upsampling block
+        LAYER_COUNTER += 1
+        upsample_2 = UpSampling2D(name=f'upsample_{LAYER_COUNTER}')(relu_1)
+        transpose_2 = Conv2DTranspose(filters=self.gen_get_filter_num(LAYER_COUNTER),
+                                    kernel_size=KERNEL_SIZE,
+                                    padding='same',
+                                    name=f'transpose_{LAYER_COUNTER}')(upsample_2)
+        batch_2 = BatchNormalization(momentum=NORM_MOMENTUM,
+                                    name=f'batch_{LAYER_COUNTER}')(transpose_2)
+        relu_2 = ReLU(name=f'relu_{LAYER_COUNTER}')(batch_2)
+        # third upsampling block: no upsampling for now
+        # QUESTION: Will transpose on final layers lead to artifacts?
+        transpose_3 = Conv2DTranspose(filters=self.gen_get_filter_num(LAYER_COUNTER),
+                                    kernel_size=KERNEL_SIZE,
+                                    padding='same',
+                                    name=f'transpose_{LAYER_COUNTER}')(relu_2)
+        batch_3 = BatchNormalization(momentum=NORM_MOMENTUM,
+                                    name=f'batch_{LAYER_COUNTER}')(transpose_3)
+        relu_3 = ReLU(name=f'relu_{LAYER_COUNTER}')(batch_3)
+        # sigmoid activation on final output to assert grayscale output
+        # in range [0, 1]
+        output_transpose = Conv2DTranspose(filters=1,
+                                            kernel_size=5,
+                                            padding='same',
+                                            name='output_transpose')(relu_3)
+        outputs = Activation(activation='sigmoid')(output_transpose)
+        # build sequential model
+        generatorStructure = Model(inputs=latent_inputs, outputs=outputs)
+        print(generatorStructure.summary())
+        self.generatorStructure = generatorStructure
+        return generatorStructure
