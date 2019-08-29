@@ -2,7 +2,7 @@ import keras
 # input is (x_pixels, y_pixels, channels), batch_size dropped
 INPUT_SHAPE = features.shape[1:]
 # filter depth of the model
-DEPTH = 64
+DIS_DEPTH = 64
 # dropout of the model; high dropout should prevent memorization in generator
 DROPOUT = 0.4
 # set default kernel_size
