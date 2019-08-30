@@ -241,8 +241,8 @@ class GAN(object):
         self.adversarialCompiled = adversarialModel
         return adversarialModel
 
-    def train_models(self, xTrain, yTrain, xVal, yVal, xTest, yTest,
-                    steps, batchSize):
+    def train_models(self, xTrain, yTrain, xVal=None, yVal=None, xTest=None,
+                    yTest=None, steps=2000, batchSize=200):
         """
         Trains discriminator, generator, and adversarial model on x- and yTrain,
         validation on x- and yVal and evaluating final metrics on x- and yTest.
@@ -250,18 +250,20 @@ class GAN(object):
         -1. and 1.
         Args:
             xTrain:             Training features for discriminator to classify
-                                    and generator to 'replicate'
-            yTrain:             Labels for training data
-            xVal (Optional):    Validation features to analyze training progress
-            yVal:               Validation labels to analyze training progress
-            xTest:              Test features to analyze model performance
-                                    after training
-            yTest:              Test labels to analyze model performance after
-                                    training
-            steps:              Number of steps to take over the data during
-                                    model training
+                                    and generator to 'replicate'.
+            yTrain:             Labels for training data.
+            xVal (Optional):    Validation features to analyze training
+                                    progress. Defaults to None.
+            yVal (Optional):    Validation labels to analyze training progress
+            xTest (Optional):   Test features to analyze model performance
+                                    after training. Defaults to None.
+            yTest (Optional):   Test labels to analyze model performance after
+                                    training. Defaults to None.
+            steps (Optional):   Number of steps to take over the data during
+                                    model training. Defaults to 2000.
             batchSize:          Number of examples over which to compute
-                                    gradient during model training
+                                    gradient during model training. Defaults
+                                    to 200.
         """
 
         def shape_assertion(dataset, name):
@@ -292,10 +294,11 @@ class GAN(object):
         assert (self.adversarialCompiled), "Adversarial model has not been compiled. Try running 'self.compile_adversarial()'."
 
 
+
         noise_input = None
         if save_interval > 0:
             noise_input = np.random.uniform(-1.0, 1.0, size=[16, 100])
-            
+
         for i in range(train_steps):
             images_train = self.x_train[np.random.randint(0,
                 self.x_train.shape[0], size=batch_size), :, :, :]
