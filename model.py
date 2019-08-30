@@ -5,6 +5,7 @@ Implements base model class for deep convolutional adversarial network
 
 import numpy as np
 import matplotlib.pyplot as plt
+from pickle import dump
 from keras.models import Model, Sequential
 from keras.optimizers import RMSprop
 from keras.layers import (Input, Conv2D, Activation, LeakyReLU, Dropout,
@@ -45,11 +46,30 @@ class DC_GAN(object):
         # default momentum for adjusting mean and var in generator batch norm
         self.NORM_MOMENTUM      =   0.9
 
-    def __str__():
+    def __str__(self):
         built = (self.discriminatorStructure and self.generatorStructure)
         compiled = (self.discriminatorCompiled and self.adversarialCompiled)
         return (f'< GAN_OBJ={self.name} IMAGE_SHAPE={self.imageShape} | ' \
                 f'BUILT={built} COMPILED={compiled} >')
+
+    def save(self, outFolder):
+        """ Saves DC_GAN object under outFolder """
+        self.generatorStructure.save(f'{outFolder}/generator.h5')
+        self.discriminatorCompiled.save(f'{outFolder}/discriminator.h5')
+        self.adversarialCompiled.save(f'{outFolder}/adversarial.h5')
+        paramDict = {'name':self.name, 'rowNum':self.rowNum,
+                    'columnNum':self.columnNum, 'channelNum':self.channelNum,
+                    'imageShape':self.imageShape, 'DIS_DEPTH':self.DIS_DEPTH,
+                    'GEN_DEPTH':self.GEN_DEPTH, 'DROPOUT':self.DROPOUT,
+                    'KERNEL_SIZE':self.KERNEL_SIZE, 'STRIDE':self.STRIDE,
+                    'LEAKY_ALPHA':self.LEAKY_ALPHA,
+                    'LATENT_DIMS':self.LATENT_DIMS,
+                    'NORM_MOMENTUM':self.NORM_MOMENTUM}
+        with open(f'{outFolder}/paramDict.sav', 'w+') as dictFile:
+            dictFile.write(dumps(paramDict))
+        print('Saved')
+        return True
+
 
     def dis_get_filter_num(self, LAYER_COUNTER):
         """
