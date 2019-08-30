@@ -275,7 +275,7 @@ class DC_GAN(object):
 
     def generate_and_plot(self, n, name, show=True, outPath=None):
         """
-        Generates n image tensors and saves plots to out path
+        Generates n image tensors and saves plots to outPath
         """
         imageTensor = self.generate_images(n)
         grayScale = self.channelNum == 1
@@ -295,7 +295,6 @@ class DC_GAN(object):
         if outPath:
             plt.savefig(outPath)
         return True
-
 
     def train_models(self, xTrain, yTrain, xVal=None, yVal=None, xTest=None,
                     yTest=None, steps=2000, batchSize=200, saveInterval=500,
@@ -324,10 +323,12 @@ class DC_GAN(object):
                                         to 200.
             saveInterval (Opt):     Intervals at which to save generator images
                                         and models. Defaults to 500.
-            outPath (Opt):          Path to which to save the final generator
-                                        model. Defaults to None.
+            outPath (Opt):          Path to which to save the DC_GAN object
+                                        after training.
+        Returns:
+            Tuple of form (trainedGenerator, trainedDiscriminator,
+            trainedAversarial).
         """
-
         def shape_assertion(dataset, name):
             """ Asserts that dataset has the proper shape """
             assert (dataset.shape[1:]==self.imageShape), (f'{name} expected ' \
@@ -344,7 +345,6 @@ class DC_GAN(object):
                         ('yVal', yVal), ('xTest', xTest), ('yTest', yTest)]
 
         for i in range(0, len(datasetInputs), 2):
-            # BUG: will break if some datasets are left as none
             name_1, dataset_1 = datasetInputs[i]
             if (dataset_1.all() != None):
                 name_2, dataset_2 = datasetInputs[i+1]
@@ -427,7 +427,8 @@ class DC_GAN(object):
             return (noiseLatent, targets)
 
         print(f'Training for {steps} steps on {trainExampleNum} examples ' \
-            f'with batch size of {batchSize}.')
+            f'with batch size of {batchSize}.\nValidating on {valExampleNum}' \
+            'examples.')
         for curStep in range(steps):
             # train discriminator on valid and invalid images
             disFeatures, disTargets = batch_discriminator_data()
@@ -455,7 +456,16 @@ class DC_GAN(object):
                 self.generatorStructure.save('training_data/' \
                                             f'generatorModel_{curStep}.h5')
 
-            if outPath:
-                self.generatorStructure.save(outPath)
+        # when training is complete, test on witheld data and save
+        if (testExampleNum > 0):
+            testData = self.discriminatorCompiled.evaluate(x=xTest, y=yTest,
+                                                        verbose=False)
+            testLoss, testAcc = round(testData[0], 4), round(testData[1], 4)
+            print(f'Training Complete after {curStep} steps.\n' \
+                f'D [test loss: {testLoss} test acc: {testAcc}]')
 
-        return True
+        if outPath:
+            self.generatorStructure.save(outPath)
+
+        return (self.generatorStructure, self.discriminatorCompiled,
+                self.adversarialCompiled)
