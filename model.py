@@ -437,11 +437,16 @@ class DC_GAN(object):
             advFeatures, advTargets = batch_adversarial_data()
             advData = self.adversarialCompiled.train_on_batch(x=advFeatures,
                                                             y=advTargets)
-            # format and log
+            # validate, format, and log
+            if (valExampleNum > 0):
+                valData = self.discriminatorCompiled.evaluate(x=xVal, y=yVal,
+                                                                verbose=False)
             disLoss, disAcc = round(disData[0], 4), round(disData[1], 4)
+            valLoss, valAcc = round(valData[0], 4), round(valData[1], 4)
             advLoss, advAcc = round(advData[0], 4), round(advData[1], 4)
             print(f'Step: {curStep}\n' \
-                f'\tD [loss: {disLoss} acc: {disAcc}]\n' \
+                f'\tD [train loss: {disLoss} train acc: {disAcc} | ' \
+                f'val loss: {valLoss} val acc: {valAcc}]' \
                 f'\tA [loss: {advLoss} acc: {advAcc}]')
             # save at saveInterval benchmarks
             if (((curStep % saveInterval) == 0) and (curStep != 0)):
@@ -449,3 +454,8 @@ class DC_GAN(object):
                                         outPath=f'training_data/{curStep}')
                 self.generatorStructure.save('training_data/' \
                                             f'generatorModel_{curStep}.h5')
+
+            if outPath:
+                self.generatorStructure.save(outPath)
+
+        return True
