@@ -228,14 +228,14 @@ class GAN(object):
 
     def compile_adversarial(self):
         """ Compiles generator model """
-        if self.generatorCompiled:
-            raise self.ModelWarning('Generator has already been compiled.')
+        if self.adversarialCompiled:
+            raise self.ModelWarning('Adversarial has already been compiled.')
         rmsOptimizer = RMSprop(lr=0.0001, decay=3e-8)
         binaryLoss = 'binary_crossentropy'
         # adversarial built by passing generator output through discriminator
         adversarialModel = Sequential()
-        adversarialModel.add(self.discriminatorStructure)
         adversarialModel.add(self.generatorStructure)
+        adversarialModel.add(self.discriminatorStructure)
         adversarialModel.compile(optimizer=rmsOptimizer, loss=binaryLoss,
                                 metrics=['accuracy'])
         self.adversarialCompiled = adversarialModel
@@ -277,14 +277,14 @@ class GAN(object):
             assert (shape_1==shape_2), (f'{name_1} and {name_2} should' \
             f'have the same number of examples, but have {shape_1} and {shape_2}')
 
-        datasetInputs = [('xTrain':xTrain), ('yTrain':yTrain), ('xVal':xVal),
-                        ('yVal':yVal), ('xTest':xTest), ('yTest':yTest)]
+        datasetInputs = [('xTrain', xTrain), ('yTrain', yTrain), ('xVal', xVal),
+                        ('yVal', yVal), ('xTest', xTest), ('yTest', yTest)]
 
-        for i, (name_1, dataset_1) in enumerate(datasetInputs):
+        for i in range(0, len(datasetInputs), step=2):
+            name_1, dataset_1 = datasetInputs[i]
+            name_2, dataset_2 = datasetInputs[i+1]
             shape_assertion(dataset_1, name_1)
-            if ((i % 2) == 0):
-                name_2, dataset_2 = datasetInputs[i+1]
-                length_assertion(dataset_1, dataset_2, name_1, name_2)
+            length_assertion(dataset_1, dataset_2, name_1, name_2)
 
         assert isinstance(steps, int), f'steps expected type int, but found type {type(steps)}.'
         assert (steps > 0), 'steps must be positive'
@@ -358,7 +358,6 @@ class GAN(object):
             targets = np.ones(shape=(batchSize,))
             return (noiseLatent, targets)
 
-
         for curStep in range(steps):
             # train discriminator on valid and invalid images
             disBatchFeatures, disBatchTargets = batch_discriminator_data()
@@ -368,32 +367,35 @@ class GAN(object):
             advBatchFeatures, advBatchTargets = batch_adversarial_data()
             advLoss = adversarialModel.train_on_batch(x=advBatchFeatures,
                                                     y=advBatchTargets)
-            print(f'Step: {curStep}\n\tD: Loss')
+            print(f'Step: {curStep}\n\t' \
+                f'D [loss: {disData[0]} acc: {disData[1]}]' \
+                f'A [loss: {advData[0]} acc: {advData[1]}]')
 
 
 
 
-        noise_input = None
-        if save_interval > 0:
-            noise_input = np.random.uniform(-1.0, 1.0, size=[16, 100])
-
-        for i in range(train_steps):
-            images_train = self.x_train[np.random.randint(0,
-                self.x_train.shape[0], size=batch_size), :, :, :]
-            noise = np.random.uniform(-1.0, 1.0, size=[batch_size, 100])
-            images_fake = self.generator.predict(noise)
-            x = np.concatenate((images_train, images_fake))
-            y = np.ones([2*batch_size, 1])
-            y[batch_size:, :] = 0
-            d_loss = self.discriminator.train_on_batch(x, y)
-
-            y = np.ones([batch_size, 1])
-            noise = np.random.uniform(-1.0, 1.0, size=[batch_size, 100])
-            a_loss = self.adversarial.train_on_batch(noise, y)
-            log_mesg = "%d: [D loss: %f, acc: %f]" % (i, d_loss[0], d_loss[1])
-            log_mesg = "%s  [A loss: %f, acc: %f]" % (log_mesg, a_loss[0], a_loss[1])
-            print(log_mesg)
-            if save_interval>0:
-                if (i+1)%save_interval==0:
-                    self.plot_images(save2file=True, samples=noise_input.shape[0],\
-                        noise=noise_input, step=(i+1))
+        #
+        # noise_input = None
+        # if save_interval > 0:
+        #     noise_input = np.random.uniform(-1.0, 1.0, size=[16, 100])
+        #
+        # for i in range(train_steps):
+        #     images_train = self.x_train[np.random.randint(0,
+        #         self.x_train.shape[0], size=batch_size), :, :, :]
+        #     noise = np.random.uniform(-1.0, 1.0, size=[batch_size, 100])
+        #     images_fake = self.generator.predict(noise)
+        #     x = np.concatenate((images_train, images_fake))
+        #     y = np.ones([2*batch_size, 1])
+        #     y[batch_size:, :] = 0
+        #     d_loss = self.discriminator.train_on_batch(x, y)
+        #
+        #     y = np.ones([batch_size, 1])
+        #     noise = np.random.uniform(-1.0, 1.0, size=[batch_size, 100])
+        #     a_loss = self.adversarial.train_on_batch(noise, y)
+        #     log_mesg = "%d: [D loss: %f, acc: %f]" % (i, d_loss[0], d_loss[1])
+        #     log_mesg = "%s  [A loss: %f, acc: %f]" % (log_mesg, a_loss[0], a_loss[1])
+        #     print(log_mesg)
+        #     if save_interval>0:
+        #         if (i+1)%save_interval==0:
+        #             self.plot_images(save2file=True, samples=noise_input.shape[0],\
+        #                 noise=noise_input, step=(i+1))
