@@ -250,12 +250,12 @@ class GAN(object):
         self.adversarialCompiled = adversarialModel
         return adversarialModel
 
-    def initialize_models(self):
+    def initialize_models(self, verbose=True):
         """ Initializes generator, discriminator, and adversarial """
         _ = self.build_discriminator(verbose=False)
-        _ = self.build_generator(verbose=True)
+        _ = self.build_generator(verbose=False)
         _ = self.compile_discriminator(verbose=False)
-        _ = self.compile_adversarial(verbose=True)
+        _ = self.compile_adversarial(verbose=verbose)
         return True
 
     def generate_images(self, n=1):
@@ -278,16 +278,23 @@ class GAN(object):
         """
         imageTensor = self.generate_images(n)
         grayScale = self.channelNum == 1
-        for image in imageTensor:
+        plt.figure(figsize=(10, 10))
+        for i, image in enumerate(imageTensor):
+            plt.subplot(4, 4, i+1)
             if grayScale:
                 grayImage = image[:, :, 0]
                 plt.imshow(grayImage, cmap='Greys')
-                plt.title(f'{name}_{n}')
-                plt.show()
-                if outPath:
-                    plt.save()
+                plt.axis('off')
             else:
                 plt.imshow(image)
+            plt.tight_layout()
+            plt.title(name)
+        if show:
+            plt.show()
+        if outPath:
+            plt.save(outPath)
+        return True
+
 
     def train_models(self, xTrain, yTrain, xVal=None, yVal=None, xTest=None,
                     yTest=None, steps=2000, batchSize=200):
