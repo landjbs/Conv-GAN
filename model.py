@@ -254,7 +254,7 @@ class DC_GAN(object):
     def initialize_models(self, verbose=True):
         """ Initializes generator, discriminator, and adversarial """
         _ = self.build_discriminator(verbose=False)
-        _ = self.build_generator(verbose=False)
+        _ = self.build_generator(verbose=True)
         _ = self.compile_discriminator(verbose=False)
         _ = self.compile_adversarial(verbose=verbose)
         return True
