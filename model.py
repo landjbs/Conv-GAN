@@ -343,9 +343,10 @@ class GAN(object):
         for i in range(0, len(datasetInputs), 2):
             # BUG: will break if some datasets are left as none
             name_1, dataset_1 = datasetInputs[i]
-            name_2, dataset_2 = datasetInputs[i+1]
-            shape_assertion(dataset_1, name_1)
-            length_assertion(dataset_1, dataset_2, name_1, name_2)
+            if (dataset_1.all() != None):
+                name_2, dataset_2 = datasetInputs[i+1]
+                shape_assertion(dataset_1, name_1)
+                length_assertion(dataset_1, dataset_2, name_1, name_2)
 
         assert isinstance(steps, int), ('steps expected type int, but found' \
                                                 f'type {type(steps)}.')
@@ -367,8 +368,8 @@ class GAN(object):
 
         # get number of examples in each dataset
         trainExampleNum = xTrain.shape[0]
-        valExampleNum = xVal.shape[0] if ((xVal.all()) != None) else 0
-        testExampleNum = xTest.shape[0] if ((xTest.all()) != None) else 0
+        valExampleNum = xVal.shape[0] if (xVal.all() != None) else 0
+        testExampleNum = xTest.shape[0] if (xTest.all() != None) else 0
 
         def batch_discriminator_data(xTrain=xTrain, batchSize=batchSize):
             """
@@ -435,8 +436,8 @@ class GAN(object):
             print(f'Step: {curStep}\n' \
                 f'\tD [loss: {disLoss} acc: {disAcc}]\n' \
                 f'\tA [loss: {advLoss} acc: {advAcc}]')
-
+            # save at saveInterval benchmarks
             if (((curStep % saveInterval) == 0) and (curStep != 0)):
                 self.generate_and_plot(n=10, name=curStep, show=False,
                                         outPath=f'training_images/{curStep}')
-                self.generatorStructure.save(f'generatorModel_{curStep}.h5')
+                self.generatorStructure.savefig(f'generatorModel_{curStep}.h5')
