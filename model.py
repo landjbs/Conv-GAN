@@ -297,7 +297,8 @@ class GAN(object):
 
 
     def train_models(self, xTrain, yTrain, xVal=None, yVal=None, xTest=None,
-                    yTest=None, steps=2000, batchSize=200, saveInterval=500):
+                    yTest=None, steps=2000, batchSize=200, saveInterval=500,
+                    outPath=None):
         """
         Trains discriminator, generator, and adversarial model on x- and yTrain,
         validation on x- and yVal and evaluating final metrics on x- and yTest.
@@ -320,8 +321,8 @@ class GAN(object):
             batchSize (Optional):   Number of examples over which to compute
                                         gradient during model training. Defaults
                                         to 200.
-            saveInterval (Opt):     Intervals at which to save generator images.
-                                        Defaults to 500.
+            saveInterval (Opt):     Intervals at which to save generator images
+                                        and models. Defaults to 500.
         """
 
         def shape_assertion(dataset, name):
@@ -435,5 +436,7 @@ class GAN(object):
                 f'\tD [loss: {disLoss} acc: {disAcc}]\n' \
                 f'\tA [loss: {advLoss} acc: {advAcc}]')
 
-            if ((curStep % 200) == 0):
-                self.adversarialCompiled.save('adversarialModel.h5')
+            if (((curStep % saveInterval) == 0) and (curStep != 0)):
+                self.generate_and_plot(n=10, name=curStep, show=False,
+                                        outPath=f'training_images/{curStep}')
+                self.generatorStructure.save(f'generatorModel_{curStep}.h5')
