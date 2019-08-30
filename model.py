@@ -47,6 +47,9 @@ class GAN(object):
         # default momentum for adjusting mean and var in generator batch norm
         self.NORM_MOMENTUM      =   0.9
 
+    def __str__():
+        return f'< GAN_OBJ={self.name} >'
+
     def dis_get_filter_num(self, LAYER_COUNTER):
         """
         Determines number of filters to use on convolution layer assuming layer
@@ -100,7 +103,7 @@ class GAN(object):
                         input_shape=INPUT_SHAPE,
                         padding='same',
                         name=f'conv_{LAYER_COUNTER}')(inputs)
-        relu_1 = LeakyReLU(RELU_ALPHA, name=f'relu_{LAYER_COUNTER}')(conv_1)
+        relu_1 = LeakyReLU(LEAKY_ALPHA, name=f'relu_{LAYER_COUNTER}')(conv_1)
         drop_1 = Dropout(rate=DROPOUT, name=f'drop_{LAYER_COUNTER}')(relu_1)
         # second conv block
         LAYER_COUNTER += 1
@@ -110,7 +113,7 @@ class GAN(object):
                         input_shape=INPUT_SHAPE,
                         padding='same',
                         name=f'conv_{LAYER_COUNTER}')(drop_1)
-        relu_2 = LeakyReLU(RELU_ALPHA, name=f'relu_{LAYER_COUNTER}')(conv_2)
+        relu_2 = LeakyReLU(LEAKY_ALPHA, name=f'relu_{LAYER_COUNTER}')(conv_2)
         drop_2 = Dropout(rate=DROPOUT, name=f'drop_{LAYER_COUNTER}')(relu_2)
         # third conv block
         LAYER_COUNTER += 1
@@ -120,7 +123,7 @@ class GAN(object):
                         input_shape=INPUT_SHAPE,
                         padding='same',
                         name=f'conv_{LAYER_COUNTER}')(drop_2)
-        relu_3 = LeakyReLU(RELU_ALPHA, name=f'relu_{LAYER_COUNTER}')(conv_3)
+        relu_3 = LeakyReLU(LEAKY_ALPHA, name=f'relu_{LAYER_COUNTER}')(conv_3)
         drop_3 = Dropout(rate=DROPOUT, name=f'drop_{LAYER_COUNTER}')(relu_3)
         # fourth conv block
         LAYER_COUNTER += 1
@@ -130,7 +133,7 @@ class GAN(object):
                         input_shape=INPUT_SHAPE,
                         padding='same',
                         name=f'conv_{LAYER_COUNTER}')(drop_3)
-        relu_4 = LeakyReLU(RELU_ALPHA, name=f'relu_{LAYER_COUNTER}')(conv_4)
+        relu_4 = LeakyReLU(LEAKY_ALPHA, name=f'relu_{LAYER_COUNTER}')(conv_4)
         drop_4 = Dropout(rate=DROPOUT, name=f'drop_{LAYER_COUNTER}')(relu_4)
         # convolutional output is flattened and passed to dense classifier
         flat = Flatten(name='flat')(drop_4)
@@ -161,7 +164,7 @@ class GAN(object):
         latent_inputs = Input(shape=(LATENT_DIMS,), name='latent_inputs')
         # dense layer to adjust and norm latent space
         dense_latent = Dense(units=LATENT_NODES,
-                            input_dim=GEN_INPUT_DIM,
+                            input_dim=LATENT_DIMS,
                             name='dense_latent')(latent_inputs)
         batch_latent = BatchNormalization(momentum=NORM_MOMENTUM,
                                         name='batch_latent')(dense_latent)
@@ -191,7 +194,7 @@ class GAN(object):
                                     name=f'batch_{LAYER_COUNTER}')(transpose_2)
         relu_2 = ReLU(name=f'relu_{LAYER_COUNTER}')(batch_2)
         # third upsampling block: no upsampling for now
-        # QUESTION: Will conv transpose on final layers lead to artifacts in sharp images?
+        # QUESTION: Will transpose on final layers lead to artifacts in sharp images?
         LAYER_COUNTER += 1
         transpose_3 = Conv2DTranspose(filters=self.gen_get_filter_num(LAYER_COUNTER),
                                     kernel_size=KERNEL_SIZE,
@@ -281,6 +284,7 @@ class GAN(object):
                         ('yVal', yVal), ('xTest', xTest), ('yTest', yTest)]
 
         for i in range(0, len(datasetInputs), 2):
+            # BUG: will break if some datasets are left as none
             name_1, dataset_1 = datasetInputs[i]
             name_2, dataset_2 = datasetInputs[i+1]
             shape_assertion(dataset_1, name_1)
@@ -297,14 +301,14 @@ class GAN(object):
 
         # get number of examples in each dataset
         trainExampleNum = xTrain.shape[0]
-        if xVal:
-            valExampleNum = xVal.shape[0]
-        else:
-            valExampleNum = 0
-        if xTest:
-            testExampleNum = xTest.shape[0]
-        else:
-            testExampleNum = 0
+        # if (xVal != None):
+        #     valExampleNum = xVal.shape[0]
+        # else:
+        #     valExampleNum = 0
+        # if (xTest != None):
+        #     testExampleNum = xTest.shape[0]
+        # else:
+        #     testExampleNum = 0
 
         def batch_discriminator_data(xTrain=xTrain, batchSize=batchSize):
             """
@@ -375,6 +379,8 @@ class GAN(object):
                 f'D [loss: {disLoss} acc: {disAcc}]\n\t' \
                 f'A [loss: {advLoss} acc: {advAcc}]')
 
+            if ((curStep % 100) == 0):
+                self.adversarialCompiled.save('adversarialModel.h5')
 
 
 
