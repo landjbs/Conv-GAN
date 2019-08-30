@@ -380,5 +380,5 @@ class GAN(object):
                 f'D [loss: {disLoss} acc: {disAcc}]\n\t' \
                 f'A [loss: {advLoss} acc: {advAcc}]')
 
-            if ((curStep % 1) == 0):
+            if ((curStep % 200) == 0):
                 self.adversarialCompiled.save('adversarialModel.h5')
