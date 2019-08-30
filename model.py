@@ -152,13 +152,13 @@ class GAN(object):
         DROPOUT         =   self.DROPOUT
         NORM_MOMENTUM   =   self.NORM_MOMENTUM
         GEN_DEPTH       =   self.GEN_DEPTH
-        # # TEMP: Find out if better params exist
+        # # TEMP: Find out if other params would be better
         GEN_DIM         =   7
         LATENT_RESHAPE  =   (GEN_DIM, GEN_DIM, GEN_DEPTH)
         LATENT_NODES    =   GEN_DIM * GEN_DIM * GEN_DEPTH
         LAYER_COUNTER   =   1
         ## generator architecture ##
-        latent_inputs = Input(shape=(LATENT_DIMS, ), name='latent_inputs')
+        latent_inputs = Input(shape=(LATENT_DIMS,), name='latent_inputs')
         # dense layer to adjust and norm latent space
         dense_latent = Dense(units=LATENT_NODES,
                             input_dim=GEN_INPUT_DIM,
@@ -191,7 +191,7 @@ class GAN(object):
                                     name=f'batch_{LAYER_COUNTER}')(transpose_2)
         relu_2 = ReLU(name=f'relu_{LAYER_COUNTER}')(batch_2)
         # third upsampling block: no upsampling for now
-        # QUESTION: Will transpose on final layers lead to artifacts?
+        # QUESTION: Will conv transpose on final layers lead to artifacts in sharp images?
         LAYER_COUNTER += 1
         transpose_3 = Conv2DTranspose(filters=self.gen_get_filter_num(LAYER_COUNTER),
                                     kernel_size=KERNEL_SIZE,
@@ -246,8 +246,8 @@ class GAN(object):
         """
         Trains discriminator, generator, and adversarial model on x- and yTrain,
         validation on x- and yVal and evaluating final metrics on x- and yTest.
-        Generator latent space is initialized with random uniform noise between
-        -1. and 1.
+        Generator latent space is initialized with random uniform noise in range
+        [-1., 1.].
         Args:
             xTrain:             Training features for discriminator to classify
                                     and generator to 'replicate'.
@@ -287,11 +287,89 @@ class GAN(object):
                 length_assertion(dataset_1, dataset_2, name_1, name_2)
 
         assert isinstance(steps, int), f'steps expected type int, but found type {type(steps)}.'
+        assert (steps > 0), 'steps must be positive'
         assert isinstance(batchSize, int), f'batchSize expected type int, but found type {type(batchSize)}'
+        assert (batchSize > 0), 'batchSize must be positive'
         assert (self.discriminatorStructure), "Desriminator structure has not been built. Try running 'self.build_discriminator()'."
         assert (self.generatorStructure), "Generator structure has not been built. Try running 'self.build_generator()'."
         assert (self.discriminatorCompiled), "Discriminator model has not been compiled. Try running 'self.compile_discriminator()'."
         assert (self.adversarialCompiled), "Adversarial model has not been compiled. Try running 'self.compile_adversarial()'."
+
+        # get number of examples in each dataset
+        trainExampleNum = xTrain.shape[0]
+        valExampleNum = xVal.shape[0] if xVal else 0
+        testExampleNum = xTest.shape[0] if xTest else 0
+
+        # cache models
+        generatorModel = self.generatorStructure
+        discriminatorModel = self.discriminatorCompiled
+        adversarialModel = self.adversarialCompiled
+
+        def batch_discriminator_data(xTrain=xTrain, batchSize=batchSize):
+            """
+            Builds batch of data for training discriminator comprised of even
+            split down batchSize. Half of output data will be a valid example
+            of instance from dataset, the other half will be invalid examples
+            initialized as a random-uniform noise vector of latentDims to be
+            passed to generator and discriminated after upsampling.
+            Args:
+                xTrain:         Dataset of features for training
+                batchSize:      Batch size for training
+            Returns:
+                4th order tensor of valid and invalid features of shape
+                ((2 * batchSize), rowNum, columnNum, channelNum) and vector of
+                target labels of length batchSize for discriminator training
+                (0 - invalid, 1 - valid) in tuple of form (features, targets).
+            """
+            # select random batchSize examples from xTrain
+            selectionIndex = np.random.randint(low=0, high=trainExampleNum,
+                                                size=batchSize)
+            validExamples = xTrain[selectionIndex, :, :, :]
+            validTargets = np.ones(shape=(batchSize,))
+            # initialize noise vector for latent space
+            noiseLatent = np.random.uniform(low=-1.0, high=1.0,
+                                            size=self.latentDims)
+            # pass noise vector through generator to get noise images
+            invalidExamples = generatorModel.predict(noiseLatent)
+            invalidTargets = np.zeros(shape=(batchSize,))
+            # concatenate features and targets and return
+            features = np.concatenate([validExamples, invalidExamples])
+            targets = np.concatenate([validTargets, invalidTargets])
+            return features, targets
+
+        def batch_adversarial_data(batchSize=batchSize):
+            """
+            Generates batch of training data for adversarial network. Here,
+            every example is a random vector of length latentDims and every
+            label is valid (1). The goal of the generator within the adversarial
+            model is to create an output from the noise vector who's 'validity
+            score' has minimum binary crossentropy loss with respect to 1.0
+            as output by the discriminator within the adversarial model.
+            Args:
+                batchSize:      Batch size for training
+            Returns:
+                2nd order tensor of shape (batchSize, latentDims) containing
+                noise vectors for initializing the generator and vector of
+                target labels (all 1's - valid) in tuple of form (features,
+                targets).
+            """
+            noiseLatent = np.random.uniform(low=-1.0, high=1.0,
+                                            size=(batchSize, self.latentDims))
+            targets = np.ones(shape=(batchSize,))
+            return (noiseLatent, targets)
+
+
+        for curStep in range(steps):
+            # train discriminator on valid and invalid images
+            disBatchFeatures, disBatchTargets = batch_discriminator_data()
+            disData = discriminatorModel.train_on_batch(x=batchFeatures,
+                                                        y=batchTargets)
+            # train adversarial network
+            advBatchFeatures, advBatchTargets = batch_adversarial_data()
+            advLoss = adversarialModel.train_on_batch(x=advBatchFeatures,
+                                                    y=advBatchTargets)
+            print(f'Step: {curStep}\n\tD: Loss')
+
 
 
 
