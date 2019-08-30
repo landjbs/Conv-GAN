@@ -274,14 +274,15 @@ class GAN(object):
 
         def shape_assertion(dataset, name):
             """ Asserts that dataset has the proper shape """
-            assert (dataset.shape[1:]==self.imageShape), f'{name} expected shape {self.imageShape}, but found shape {dataset.shape}.'
+            assert (dataset.shape[1:]==self.imageShape), (f'{name} expected ' \
+                f'shape {self.imageShape}, but found shape {dataset.shape}.')
 
         def length_assertion(dataset_1, dataset_2, name_1, name_2):
             """ Asserts that two datasets have the same example number """
             shape_1 = dataset_1.shape[0]
             shape_2 = dataset_2.shape[0]
-            assert (shape_1==shape_2), (f'{name_1} and {name_2} should' \
-            f'have the same number of examples, but have {shape_1} and {shape_2}')
+            assert (shape_1==shape_2), (f'{name_1} and {name_2} should have ' \
+            f'the same number of examples, but have {shape_1} and {shape_2}')
 
         datasetInputs = [('xTrain', xTrain), ('yTrain', yTrain), ('xVal', xVal),
                         ('yVal', yVal), ('xTest', xTest), ('yTest', yTest)]
@@ -293,14 +294,20 @@ class GAN(object):
             shape_assertion(dataset_1, name_1)
             length_assertion(dataset_1, dataset_2, name_1, name_2)
 
-        assert isinstance(steps, int), f'steps expected type int, but found type {type(steps)}.'
+        assert isinstance(steps, int), ('steps expected type int, but found' \
+                                                f'type {type(steps)}.')
         assert (steps > 0), 'steps must be positive'
-        assert isinstance(batchSize, int), f'batchSize expected type int, but found type {type(batchSize)}'
+        assert isinstance(batchSize, int), (f'batchSize expected type int, ' \
+                                        'but found type {type(batchSize)}')
         assert (batchSize > 0), 'batchSize must be positive'
-        assert (self.discriminatorStructure), "Desriminator structure has not been built. Try running 'self.build_discriminator()'."
-        assert (self.generatorStructure), "Generator structure has not been built. Try running 'self.build_generator()'."
-        assert (self.discriminatorCompiled), "Discriminator model has not been compiled. Try running 'self.compile_discriminator()'."
-        assert (self.adversarialCompiled), "Adversarial model has not been compiled. Try running 'self.compile_adversarial()'."
+        assert (self.discriminatorStructure), ("Desriminator structure has " \
+                    "not been built. Try running 'self.build_discriminator()'.")
+        assert (self.generatorStructure), ("Generator structure has not been " \
+                                "built. Try running 'self.build_generator()'.")
+        assert (self.discriminatorCompiled), ("Discriminator model has not " \
+                "been compiled. Try running 'self.compile_discriminator()'.")
+        assert (self.adversarialCompiled), ("Adversarial model has not been " \
+                        "compiled. Try running 'self.compile_adversarial()'.")
 
         # get number of examples in each dataset
         trainExampleNum = xTrain.shape[0]
