@@ -297,28 +297,31 @@ class GAN(object):
 
 
     def train_models(self, xTrain, yTrain, xVal=None, yVal=None, xTest=None,
-                    yTest=None, steps=2000, batchSize=200):
+                    yTest=None, steps=2000, batchSize=200, saveInterval=500):
         """
         Trains discriminator, generator, and adversarial model on x- and yTrain,
         validation on x- and yVal and evaluating final metrics on x- and yTest.
         Generator latent space is initialized with random uniform noise in range
         [-1., 1.].
         Args:
-            xTrain:             Training features for discriminator to classify
-                                    and generator to 'replicate'.
-            yTrain:             Labels for training data.
-            xVal (Optional):    Validation features to analyze training
-                                    progress. Defaults to None.
-            yVal (Optional):    Validation labels to analyze training progress
-            xTest (Optional):   Test features to analyze model performance
-                                    after training. Defaults to None.
-            yTest (Optional):   Test labels to analyze model performance after
-                                    training. Defaults to None.
-            steps (Optional):   Number of steps to take over the data during
-                                    model training. Defaults to 2000.
-            batchSize:          Number of examples over which to compute
-                                    gradient during model training. Defaults
-                                    to 200.
+            xTrain:                 Training features for discriminator to
+                                        classify and generator to 'replicate'.
+            yTrain:                 Labels for training data.
+            xVal (Optional):        Validation features to analyze training
+                                        progress. Defaults to None.
+            yVal (Optional):        Validation labels to analyze training
+                                        progress
+            xTest (Optional):       Test features to analyze model performance
+                                        after training. Defaults to None.
+            yTest (Optional):       Test labels to analyze model performance
+                                        after training. Defaults to None.
+            steps (Optional):       Number of steps to take over the data during
+                                        model training. Defaults to 2000.
+            batchSize (Optional):   Number of examples over which to compute
+                                        gradient during model training. Defaults
+                                        to 200.
+            saveInterval (Opt):     Intervals at which to save generator images.
+                                        Defaults to 500.
         """
 
         def shape_assertion(dataset, name):
@@ -349,6 +352,9 @@ class GAN(object):
         assert isinstance(batchSize, int), (f'batchSize expected type int, ' \
                                         'but found type {type(batchSize)}')
         assert (batchSize > 0), 'batchSize must be positive'
+        assert (isinstance(saveInterval, int) or (saveInterval==None)), ('save'\
+                'Interval expected either and int or None, but found type' \
+                f'{type(saveInterval)}')
         assert (self.discriminatorStructure), ("Disriminator structure has " \
                     "not been built. Try running 'self.initialize_models()'.")
         assert (self.generatorStructure), ("Generator structure has not been " \
