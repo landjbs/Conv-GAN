@@ -4,6 +4,7 @@ Implements base model class for deep convolutional adversarial network
 
 
 import numpy as np
+import matplotlib.pyplot as plt
 from keras.models import Model, Sequential
 from keras.optimizers import RMSprop
 from keras.layers import (Input, Conv2D, Activation, LeakyReLU, Dropout,
