@@ -6,13 +6,13 @@ Implements base model class for deep convolutional adversarial network
 #     """ Helper to assert proper typing of function inputs """
 #     assert isinstance(obj, expectedType), f'{name} expected type {expectedType}, but found type {type{obj}}'
 
+import numpy as np
 from keras.models import Model, Sequential
 from keras.optimizers import RMSprop
 from keras.layers import (Input, Conv2D, Activation, LeakyReLU, Dropout,
                             Flatten, Dense, BatchNormalization, ReLU,
                             UpSampling2D, Conv2DTranspose, Reshape)
 
-import keras
 
 class GAN(object):
 
@@ -241,6 +241,74 @@ class GAN(object):
         self.adversarialCompiled = adversarialModel
         return adversarialModel
 
-    def train_models(self, x, y):
-        """ """
-        
+    def train_models(self, xTrain, yTrain, xVal, yVal, xTest, yTest,
+                    steps, batchSize):
+        """
+        Trains discriminator, generator, and adversarial model on x- and yTrain,
+        validation on x- and yVal and evaluating final metrics on x- and yTest.
+        Generator latent space is initialized with random uniform noise between
+        -1. and 1.
+        Args:
+            xTrain:             Training features for discriminator to classify
+                                    and generator to 'replicate'
+            yTrain:             Labels for training data
+            xVal (Optional):    Validation features to analyze training progress
+            yVal:               Validation labels to analyze training progress
+            xTest:              Test features to analyze model performance
+                                    after training
+            yTest:              Test labels to analyze model performance after
+                                    training
+            steps:              Number of steps to take over the data during
+                                    model training
+            batchSize:          Number of examples over which to compute
+                                    gradient during model training
+        """
+
+        def shape_assertion(dataset, name):
+            """ Asserts that dataset has the proper shape """
+            assert (dataset.shape[1:]==self.imageShape), f'{name} expected shape {self.imageShape}, but found shape {dataset.shape}.'
+
+        def length_assertion(dataset_1, dataset_2, name_1, name_2):
+            """ Asserts that two datasets have the same example number """
+            shape_1 = dataset_1.shape[0]
+            shape_2 = dataset_2.shape[0]
+            assert (shape_1==shape_2), (f'{name_1} and {name_2} should' \
+            f'have the same number of examples, but have {shape_1} and {shape_2}')
+
+        datasetInputs = [('xTrain':xTrain), ('yTrain':yTrain), ('xVal':xVal),
+                        ('yVal':yVal), ('xTest':xTest), ('yTest':yTest)]
+
+        for i, (name_1, dataset_1) in enumerate(datasetInputs):
+            shape_assertion(dataset_1, name_1)
+            if ((i % 2) == 0):
+                name_2, dataset_2 = datasetInputs[i+1]
+                length_assertion(dataset_1, dataset_2, name_1, name_2)
+
+        assert isinstance(steps, int), f'steps expected type int, but found type {type(steps)}.'
+        assert isinstance(batchSize, int), f'batchSize expected type int, but found type {type(batchSize)}'
+        assert
+
+
+        noise_input = None
+        if save_interval>0:
+            noise_input = np.random.uniform(-1.0, 1.0, size=[16, 100])
+        for i in range(train_steps):
+            images_train = self.x_train[np.random.randint(0,
+                self.x_train.shape[0], size=batch_size), :, :, :]
+            noise = np.random.uniform(-1.0, 1.0, size=[batch_size, 100])
+            images_fake = self.generator.predict(noise)
+            x = np.concatenate((images_train, images_fake))
+            y = np.ones([2*batch_size, 1])
+            y[batch_size:, :] = 0
+            d_loss = self.discriminator.train_on_batch(x, y)
+
+            y = np.ones([batch_size, 1])
+            noise = np.random.uniform(-1.0, 1.0, size=[batch_size, 100])
+            a_loss = self.adversarial.train_on_batch(noise, y)
+            log_mesg = "%d: [D loss: %f, acc: %f]" % (i, d_loss[0], d_loss[1])
+            log_mesg = "%s  [A loss: %f, acc: %f]" % (log_mesg, a_loss[0], a_loss[1])
+            print(log_mesg)
+            if save_interval>0:
+                if (i+1)%save_interval==0:
+                    self.plot_images(save2file=True, samples=noise_input.shape[0],\
+                        noise=noise_input, step=(i+1))
