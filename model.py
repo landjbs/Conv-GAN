@@ -447,7 +447,7 @@ class DC_GAN(object):
             return (noiseLatent, targets)
 
         print(f'Training for {steps} steps on {trainExampleNum} examples ' \
-            f'with batch size of {batchSize}.\nValidating on {valExampleNum}' \
+            f'with batch size of {batchSize}.\nValidating on {valExampleNum} ' \
             'examples.')
         for curStep in range(steps):
             # train discriminator on valid and invalid images
@@ -459,15 +459,16 @@ class DC_GAN(object):
             advData = self.adversarialCompiled.train_on_batch(x=advFeatures,
                                                             y=advTargets)
             # validate, format, and log
-            if (valExampleNum > 0):
-                valData = self.discriminatorCompiled.evaluate(x=xVal, y=yVal,
-                                                                verbose=False)
+            # if (valExampleNum > 0):
+            #     valData = self.discriminatorCompiled.evaluate(x=xVal, y=yVal,
+            #                                                     verbose=False)
+            valData = [0,0]
             disLoss, disAcc = round(disData[0], 4), round(disData[1], 4)
             valLoss, valAcc = round(valData[0], 4), round(valData[1], 4)
             advLoss, advAcc = round(advData[0], 4), round(advData[1], 4)
             print(f'Step: {curStep}\n' \
                 f'\tD [train loss: {disLoss} train acc: {disAcc} | ' \
-                f'val loss: {valLoss} val acc: {valAcc}]' \
+                f'val loss: {valLoss} val acc: {valAcc}]\n' \
                 f'\tA [loss: {advLoss} acc: {advAcc}]')
             # save at saveInterval benchmarks
             if (((curStep % saveInterval) == 0) and (curStep != 0)):
@@ -478,8 +479,9 @@ class DC_GAN(object):
 
         # when training is complete, test on witheld data and save
         if (testExampleNum > 0):
-            testData = self.discriminatorCompiled.evaluate(x=xTest, y=yTest,
-                                                        verbose=False)
+            # testData = self.discriminatorCompiled.evaluate(x=xTest, y=yTest,
+            #                                             verbose=False)
+            testData = [0, 0]
             testLoss, testAcc = round(testData[0], 4), round(testData[1], 4)
             print(f'Training Complete after {curStep} steps.\n' \
                 f'D [test loss: {testLoss} test acc: {testAcc}]')
