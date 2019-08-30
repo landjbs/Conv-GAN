@@ -11,7 +11,7 @@ from keras.layers import (Input, Conv2D, Activation, LeakyReLU, Dropout,
                             UpSampling2D, Conv2DTranspose, Reshape)
 
 
-class GAN(object):
+class DC_GAN(object):
 
     def __init__(self, name, rowNum, columnNum, channelNum):
         self.name   =   name
@@ -292,7 +292,7 @@ class GAN(object):
         if show:
             plt.show()
         if outPath:
-            plt.save(outPath)
+            plt.savefig(outPath)
         return True
 
 
@@ -323,6 +323,8 @@ class GAN(object):
                                         to 200.
             saveInterval (Opt):     Intervals at which to save generator images
                                         and models. Defaults to 500.
+            outPath (Opt):          Path to which to save the final generator
+                                        model. Defaults to None.
         """
 
         def shape_assertion(dataset, name):
@@ -357,6 +359,8 @@ class GAN(object):
         assert (isinstance(saveInterval, int) or (saveInterval==None)), ('save'\
                 'Interval expected either and int or None, but found type' \
                 f'{type(saveInterval)}')
+        assert (isinstance(outPath, str) or (outPath==None)), ('outPath ' \
+                        f'expected type str, but found type {type(outPath)}')
         assert (self.discriminatorStructure), ("Disriminator structure has " \
                     "not been built. Try running 'self.initialize_models()'.")
         assert (self.generatorStructure), ("Generator structure has not been " \
@@ -421,6 +425,8 @@ class GAN(object):
             targets = np.ones(shape=(batchSize,))
             return (noiseLatent, targets)
 
+        print(f'Training for {steps} steps on {trainExampleNum} examples ' \
+            f'with batch size of {batchSize}.')
         for curStep in range(steps):
             # train discriminator on valid and invalid images
             disFeatures, disTargets = batch_discriminator_data()
@@ -440,4 +446,4 @@ class GAN(object):
             if (((curStep % saveInterval) == 0) and (curStep != 0)):
                 self.generate_and_plot(n=10, name=curStep, show=False,
                                         outPath=f'training_images/{curStep}')
-                self.generatorStructure.savefig(f'generatorModel_{curStep}.h5')
+                self.generatorStructure.save(f'generatorModel_{curStep}.h5')
