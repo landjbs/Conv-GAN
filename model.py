@@ -286,12 +286,16 @@ class GAN(object):
 
         assert isinstance(steps, int), f'steps expected type int, but found type {type(steps)}.'
         assert isinstance(batchSize, int), f'batchSize expected type int, but found type {type(batchSize)}'
-        assert
+        assert (self.discriminatorStructure), "Desriminator structure has not been built. Try running 'self.build_discriminator()'."
+        assert (self.generatorStructure), "Generator structure has not been built. Try running 'self.build_generator()'."
+        assert (self.discriminatorCompiled), "Discriminator model has not been compiled. Try running 'self.compile_discriminator()'."
+        assert (self.adversarialCompiled), "Adversarial model has not been compiled. Try running 'self.compile_adversarial()'."
 
 
         noise_input = None
-        if save_interval>0:
+        if save_interval > 0:
             noise_input = np.random.uniform(-1.0, 1.0, size=[16, 100])
+            
         for i in range(train_steps):
             images_train = self.x_train[np.random.randint(0,
                 self.x_train.shape[0], size=batch_size), :, :, :]
