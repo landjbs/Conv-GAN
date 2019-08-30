@@ -308,8 +308,8 @@ class GAN(object):
 
         # get number of examples in each dataset
         trainExampleNum = xTrain.shape[0]
-        valExampleNum = xVal.shape[0] if (all(xVal) != None) else 0
-        testExampleNum = xTest.shape[0] if (all(xTest) != None) else 0
+        valExampleNum = xVal.shape[0] if ((xVal.all()) != None) else 0
+        testExampleNum = xTest.shape[0] if ((xTest.all()) != None) else 0
 
         def batch_discriminator_data(xTrain=xTrain, batchSize=batchSize):
             """
@@ -380,5 +380,5 @@ class GAN(object):
                 f'D [loss: {disLoss} acc: {disAcc}]\n\t' \
                 f'A [loss: {advLoss} acc: {advAcc}]')
 
-            if ((curStep % 100) == 0):
+            if ((curStep % 1) == 0):
                 self.adversarialCompiled.save('adversarialModel.h5')
