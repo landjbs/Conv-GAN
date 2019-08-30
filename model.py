@@ -255,7 +255,7 @@ class GAN(object):
         _ = self.build_discriminator(verbose=False)
         _ = self.build_generator(verbose=True)
         _ = self.compile_discriminator(verbose=False)
-        _ = self.compile_adversarial(verbose=False)
+        _ = self.compile_adversarial(verbose=True)
         return True
 
     def generate_images(n):
