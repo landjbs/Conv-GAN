@@ -211,3 +211,10 @@ class GAN(object):
         print(generatorStructure.summary())
         self.generatorStructure = generatorStructure
         return generatorStructure
+
+    def compile_discriminator(self):
+        """ Compiles discriminator model """
+        if self.discriminatorCompiled:
+            raise self.ModelWarning("Discriminator has already been compiled.")
+            return discriminatorCompiled
+        
