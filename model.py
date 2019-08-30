@@ -70,7 +70,7 @@ class GAN(object):
         """ Class for warnings related to model building and compiling """
         pass
 
-    def build_discriminator(self):
+    def build_discriminator(self, verbose=True):
         """
         Builds discriminator architecture without compiling model.
         Uses functional API to allow for easy insertion of non-sequential
@@ -140,11 +140,12 @@ class GAN(object):
         outputs = Dense(units=1, activation='sigmoid', name='outputs')(flat)
         # build sequential model
         discriminatorStructure = Model(inputs=inputs, outputs=outputs)
-        print(discriminatorStructure.summary())
+        if verbose:
+            print(discriminatorStructure.summary())
         self.discriminatorStructure = discriminatorStructure
         return discriminatorStructure
 
-    def build_generator(self):
+    def build_generator(self, verbose=True):
         """ Builds generator architecture without compiling model """
         if self.generatorStructure:
             raise self.ModelWarning('Generator has already been built.')
@@ -212,11 +213,12 @@ class GAN(object):
         outputs = Activation(activation='sigmoid')(output_transpose)
         # build sequential model
         generatorStructure = Model(inputs=latent_inputs, outputs=outputs)
-        print(generatorStructure.summary())
+        if verbose:
+            print(generatorStructure.summary())
         self.generatorStructure = generatorStructure
         return generatorStructure
 
-    def compile_discriminator(self):
+    def compile_discriminator(self, verbose=True):
         """ Compiles discriminator model """
         if self.discriminatorCompiled:
             raise self.ModelWarning('Discriminator has already been compiled.')
@@ -226,10 +228,12 @@ class GAN(object):
         discriminatorModel = self.discriminatorStructure
         discriminatorModel.compile(optimizer=rmsOptimizer, loss=binaryLoss,
                                 metrics=['accuracy'])
+        if verbose:
+            print(discriminatorModel.summary())
         self.discriminatorCompiled = discriminatorModel
         return discriminatorModel
 
-    def compile_adversarial(self):
+    def compile_adversarial(self, verbose=True):
         """ Compiles generator model """
         if self.adversarialCompiled:
             raise self.ModelWarning('Adversarial has already been compiled.')
@@ -241,8 +245,18 @@ class GAN(object):
         adversarialModel.add(self.discriminatorStructure)
         adversarialModel.compile(optimizer=rmsOptimizer, loss=binaryLoss,
                                 metrics=['accuracy'])
+        if verbose:
+            print(adversarialModel.summary())
         self.adversarialCompiled = adversarialModel
         return adversarialModel
+
+    def initialize_models(self):
+        """ Initializes generator, discriminator, and adversarial """
+        _ = self.build_discriminator(verbose=False)
+        _ = self.build_generator(verbose=True)
+        _ = self.compile_discriminator(verbose=False)
+        _ = self.compile_adversarial(verbose=False)
+        return True
 
     def generate_images(n):
         """
