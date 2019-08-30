@@ -446,5 +446,6 @@ class DC_GAN(object):
             # save at saveInterval benchmarks
             if (((curStep % saveInterval) == 0) and (curStep != 0)):
                 self.generate_and_plot(n=10, name=curStep, show=False,
-                                        outPath=f'training_images/{curStep}')
-                self.generatorStructure.save(f'generatorModel_{curStep}.h5')
+                                        outPath=f'training_data/{curStep}')
+                self.generatorStructure.save('training_data/' \
+                                            f'generatorModel_{curStep}.h5')
