@@ -311,14 +311,8 @@ class GAN(object):
 
         # get number of examples in each dataset
         trainExampleNum = xTrain.shape[0]
-        # if (xVal != None):
-        #     valExampleNum = xVal.shape[0]
-        # else:
-        #     valExampleNum = 0
-        # if (xTest != None):
-        #     testExampleNum = xTest.shape[0]
-        # else:
-        #     testExampleNum = 0
+        valExampleNum = xVal.shape[0] if (all(xVal) != None) else 0
+        testExampleNum = xTest.shape[0] if (all(xTest) != None) else 0
 
         def batch_discriminator_data(xTrain=xTrain, batchSize=batchSize):
             """
@@ -391,31 +385,3 @@ class GAN(object):
 
             if ((curStep % 100) == 0):
                 self.adversarialCompiled.save('adversarialModel.h5')
-
-
-
-        #
-        # noise_input = None
-        # if save_interval > 0:
-        #     noise_input = np.random.uniform(-1.0, 1.0, size=[16, 100])
-        #
-        # for i in range(train_steps):
-        #     images_train = self.x_train[np.random.randint(0,
-        #         self.x_train.shape[0], size=batch_size), :, :, :]
-        #     noise = np.random.uniform(-1.0, 1.0, size=[batch_size, 100])
-        #     images_fake = self.generator.predict(noise)
-        #     x = np.concatenate((images_train, images_fake))
-        #     y = np.ones([2*batch_size, 1])
-        #     y[batch_size:, :] = 0
-        #     d_loss = self.discriminator.train_on_batch(x, y)
-        #
-        #     y = np.ones([batch_size, 1])
-        #     noise = np.random.uniform(-1.0, 1.0, size=[batch_size, 100])
-        #     a_loss = self.adversarial.train_on_batch(noise, y)
-        #     log_mesg = "%d: [D loss: %f, acc: %f]" % (i, d_loss[0], d_loss[1])
-        #     log_mesg = "%s  [A loss: %f, acc: %f]" % (log_mesg, a_loss[0], a_loss[1])
-        #     print(log_mesg)
-        #     if save_interval>0:
-        #         if (i+1)%save_interval==0:
-        #             self.plot_images(save2file=True, samples=noise_input.shape[0],\
-        #                 noise=noise_input, step=(i+1))
