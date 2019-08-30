@@ -223,8 +223,8 @@ class GAN(object):
         discriminatorModel = self.discriminatorStructure
         discriminatorModel.compile(optimizer=rmsOptimizer, loss=binaryLoss,
                                 metrics=['accuracy'])
-        self.discriminatorCompiled = discriminator
-        return discriminator
+        self.discriminatorCompiled = discriminatorModel
+        return discriminatorModel
 
     def compile_adversarial(self):
         """ Compiles generator model """
@@ -301,9 +301,9 @@ class GAN(object):
         # testExampleNum = xTest.shape[0] if (xTest != None) else 0
 
         # cache models
-        generatorModel = self.generatorStructure
-        discriminatorModel = self.discriminatorCompiled
-        adversarialModel = self.adversarialCompiled
+        # generatorModel = self.generatorStructure
+        # discriminatorModel = self.discriminatorCompiled
+        # adversarialModel = self.adversarialCompiled
 
         def batch_discriminator_data(xTrain=xTrain, batchSize=batchSize):
             """
@@ -329,8 +329,9 @@ class GAN(object):
             # initialize noise vector for latent space
             noiseLatent = np.random.uniform(low=-1.0, high=1.0,
                                             size=self.LATENT_DIMS)
+            expandedLatent = np.expand_dims(noiseLatent, axis=0)
             # pass noise vector through generator to get noise images
-            invalidExamples = generatorModel.predict(noiseLatent)
+            invalidExamples = self.generatorStructure.predict(expandedLatent)
             invalidTargets = np.zeros(shape=(batchSize,))
             # concatenate features and targets and return
             features = np.concatenate([validExamples, invalidExamples])
@@ -360,13 +361,16 @@ class GAN(object):
 
         for curStep in range(steps):
             # train discriminator on valid and invalid images
-            disBatchFeatures, disBatchTargets = batch_discriminator_data()
-            disData = discriminatorModel.train_on_batch(x=batchFeatures,
-                                                        y=batchTargets)
+            print(1)
+            disFeatures, disTargets = batch_discriminator_data()
+            disData = self.discriminatorCompiled.train_on_batch(x=disFeatures,
+                                                                y=disTargets)
+            print(2)
             # train adversarial network
-            advBatchFeatures, advBatchTargets = batch_adversarial_data()
-            advLoss = adversarialModel.train_on_batch(x=advBatchFeatures,
-                                                    y=advBatchTargets)
+            advFeatures, advTargets = batch_adversarial_data()
+            advLoss = self.adversarialCompiled.train_on_batch(x=advFeatures,
+                                                            y=advTargets)
+            print(3)
             print(f'Step: {curStep}\n\t' \
                 f'D [loss: {disData[0]} acc: {disData[1]}]' \
                 f'A [loss: {advData[0]} acc: {advData[1]}]')
