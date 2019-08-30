@@ -258,12 +258,12 @@ class GAN(object):
         _ = self.compile_adversarial(verbose=True)
         return True
 
-    def generate_images(n):
+    def generate_images(self, n=1):
         """
         Generates n images initialized with a random noise vector using
         the current generator.
         Args:
-            n:          Int number of images to generate
+            n (optional):       Int number of images to generate (defaults to 1)
         Returns:
             imageTensor of shape (n, rowNum, columnNum, channelNum) generated
             by generator given latent dim size noise vector.
@@ -271,6 +271,23 @@ class GAN(object):
         noiseVector = np.random.uniform(-1.0, 1.0, size=(n, self.LATENT_DIMS))
         imageTensor = self.generatorStructure.predict(noiseVector)
         return imageTensor
+
+    def generate_and_plot(self, n, name, show=True, outPath=None):
+        """
+        Generates n image tensors and saves plots to out path
+        """
+        imageTensor = self.generate_images(n)
+        grayScale = self.channelNum == 1
+        for image in imageTensor:
+            if grayScale:
+                grayImage = image[:, :, 0]
+                plt.imshow(grayImage, cmap='Greys')
+                plt.title(f'{name}_{n}')
+                plt.show()
+                if outPath:
+                    plt.save()
+            else:
+                plt.imshow(image)
 
     def train_models(self, xTrain, yTrain, xVal=None, yVal=None, xTest=None,
                     yTest=None, steps=2000, batchSize=200):
@@ -325,7 +342,7 @@ class GAN(object):
         assert isinstance(batchSize, int), (f'batchSize expected type int, ' \
                                         'but found type {type(batchSize)}')
         assert (batchSize > 0), 'batchSize must be positive'
-        assert (self.discriminatorStructure), ("Desriminator structure has " \
+        assert (self.discriminatorStructure), ("Disriminator structure has " \
                     "not been built. Try running 'self.initialize_models()'.")
         assert (self.generatorStructure), ("Generator structure has not been " \
                             "built. Try running 'self.initialize_models()'.")
