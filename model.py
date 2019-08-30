@@ -244,6 +244,20 @@ class GAN(object):
         self.adversarialCompiled = adversarialModel
         return adversarialModel
 
+    def generate_images(n):
+        """
+        Generates n images initialized with a random noise vector using
+        the current generator.
+        Args:
+            n:          Int number of images to generate
+        Returns:
+            imageTensor of shape (n, rowNum, columnNum, channelNum) generated
+            by generator given latent dim size noise vector.
+        """
+        noiseVector = np.random.uniform(-1.0, 1.0, size=(n, self.LATENT_DIMS))
+        imageTensor = self.generatorStructure.predict(noiseVector)
+        return imageTensor
+
     def train_models(self, xTrain, yTrain, xVal=None, yVal=None, xTest=None,
                     yTest=None, steps=2000, batchSize=200):
         """
@@ -332,11 +346,8 @@ class GAN(object):
                                                 size=batchSize)
             validExamples = xTrain[selectionIndex, :, :, :]
             validTargets = np.ones(shape=(batchSize,))
-            # initialize noise vector for latent space
-            noiseLatent = np.random.uniform(low=-1.0, high=1.0,
-                                            size=(batchSize, self.LATENT_DIMS))
             # pass noise vector through generator to get noise images
-            invalidExamples = self.generatorStructure.predict(noiseLatent)
+            invalidExamples = self.generate_images(batchSize)
             invalidTargets = np.zeros(shape=(batchSize,))
             # concatenate features and targets and return
             features = np.concatenate([validExamples, invalidExamples])
@@ -376,9 +387,9 @@ class GAN(object):
             # format and log
             disLoss, disAcc = round(disData[0], 4), round(disData[1], 4)
             advLoss, advAcc = round(advData[0], 4), round(advData[1], 4)
-            print(f'Step: {curStep}\n\t' \
-                f'D [loss: {disLoss} acc: {disAcc}]\n\t' \
-                f'A [loss: {advLoss} acc: {advAcc}]')
+            print(f'Step: {curStep}\n' \
+                f'\tD [loss: {disLoss} acc: {disAcc}]\n' \
+                f'\tA [loss: {advLoss} acc: {advAcc}]')
 
             if ((curStep % 200) == 0):
                 self.adversarialCompiled.save('adversarialModel.h5')
