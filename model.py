@@ -2,9 +2,6 @@
 Implements base model class for deep convolutional adversarial network
 """
 
-# def assert_types(obj, name, expectedType):
-#     """ Helper to assert proper typing of function inputs """
-#     assert isinstance(obj, expectedType), f'{name} expected type {expectedType}, but found type {type{obj}}'
 
 import numpy as np
 from keras.models import Model, Sequential
