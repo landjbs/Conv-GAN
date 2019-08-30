@@ -280,7 +280,7 @@ class GAN(object):
         datasetInputs = [('xTrain', xTrain), ('yTrain', yTrain), ('xVal', xVal),
                         ('yVal', yVal), ('xTest', xTest), ('yTest', yTest)]
 
-        for i in range(0, len(datasetInputs), step=2):
+        for i in range(0, len(datasetInputs), 2):
             name_1, dataset_1 = datasetInputs[i]
             name_2, dataset_2 = datasetInputs[i+1]
             shape_assertion(dataset_1, name_1)
@@ -297,8 +297,8 @@ class GAN(object):
 
         # get number of examples in each dataset
         trainExampleNum = xTrain.shape[0]
-        valExampleNum = xVal.shape[0] if xVal else 0
-        testExampleNum = xTest.shape[0] if xTest else 0
+        # valExampleNum = xVal.shape[0] if (xVal != None) else 0
+        # testExampleNum = xTest.shape[0] if (xTest != None) else 0
 
         # cache models
         generatorModel = self.generatorStructure
@@ -328,7 +328,7 @@ class GAN(object):
             validTargets = np.ones(shape=(batchSize,))
             # initialize noise vector for latent space
             noiseLatent = np.random.uniform(low=-1.0, high=1.0,
-                                            size=self.latentDims)
+                                            size=self.LATENT_DIMS)
             # pass noise vector through generator to get noise images
             invalidExamples = generatorModel.predict(noiseLatent)
             invalidTargets = np.zeros(shape=(batchSize,))
@@ -354,7 +354,7 @@ class GAN(object):
                 targets).
             """
             noiseLatent = np.random.uniform(low=-1.0, high=1.0,
-                                            size=(batchSize, self.latentDims))
+                                            size=(batchSize, self.LATENT_DIMS))
             targets = np.ones(shape=(batchSize,))
             return (noiseLatent, targets)
 
