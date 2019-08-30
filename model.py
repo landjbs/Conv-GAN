@@ -297,13 +297,14 @@ class GAN(object):
 
         # get number of examples in each dataset
         trainExampleNum = xTrain.shape[0]
-        # valExampleNum = xVal.shape[0] if (xVal != None) else 0
-        # testExampleNum = xTest.shape[0] if (xTest != None) else 0
-
-        # cache models
-        # generatorModel = self.generatorStructure
-        # discriminatorModel = self.discriminatorCompiled
-        # adversarialModel = self.adversarialCompiled
+        if xVal:
+            valExampleNum = xVal.shape[0]
+        else:
+            valExampleNum = 0
+        if xTest:
+            testExampleNum = xTest.shape[0]
+        else:
+            testExampleNum = 0
 
         def batch_discriminator_data(xTrain=xTrain, batchSize=batchSize):
             """
@@ -328,10 +329,9 @@ class GAN(object):
             validTargets = np.ones(shape=(batchSize,))
             # initialize noise vector for latent space
             noiseLatent = np.random.uniform(low=-1.0, high=1.0,
-                                            size=self.LATENT_DIMS)
-            expandedLatent = np.expand_dims(noiseLatent, axis=0)
+                                            size=(batchSize, self.LATENT_DIMS))
             # pass noise vector through generator to get noise images
-            invalidExamples = self.generatorStructure.predict(expandedLatent)
+            invalidExamples = self.generatorStructure.predict(noiseLatent)
             invalidTargets = np.zeros(shape=(batchSize,))
             # concatenate features and targets and return
             features = np.concatenate([validExamples, invalidExamples])
@@ -361,19 +361,19 @@ class GAN(object):
 
         for curStep in range(steps):
             # train discriminator on valid and invalid images
-            print(1)
             disFeatures, disTargets = batch_discriminator_data()
             disData = self.discriminatorCompiled.train_on_batch(x=disFeatures,
                                                                 y=disTargets)
-            print(2)
             # train adversarial network
             advFeatures, advTargets = batch_adversarial_data()
-            advLoss = self.adversarialCompiled.train_on_batch(x=advFeatures,
+            advData = self.adversarialCompiled.train_on_batch(x=advFeatures,
                                                             y=advTargets)
-            print(3)
+            # format and log
+            disLoss, disAcc = round(disData[0], 4), round(disData[1], 4)
+            advLoss, advAcc = round(advData[0], 4), round(advData[1], 4)
             print(f'Step: {curStep}\n\t' \
-                f'D [loss: {disData[0]} acc: {disData[1]}]' \
-                f'A [loss: {advData[0]} acc: {advData[1]}]')
+                f'D [loss: {disLoss} acc: {disAcc}]\n\t' \
+                f'A [loss: {advLoss} acc: {advAcc}]')
 
 
 
