@@ -48,7 +48,10 @@ class GAN(object):
         self.NORM_MOMENTUM      =   0.9
 
     def __str__():
-        return f'< GAN_OBJ={self.name} >'
+        built = (self.discriminatorStructure and self.generatorStructure)
+        compiled = (self.discriminatorCompiled and self.adversarialCompiled)
+        return (f'< GAN_OBJ={self.name} IMAGE_SHAPE={self.imageShape} | ' \
+                f'BUILT={built} COMPILED={compiled} >')
 
     def dis_get_filter_num(self, LAYER_COUNTER):
         """
