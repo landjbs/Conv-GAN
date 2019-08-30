@@ -326,13 +326,13 @@ class GAN(object):
                                         'but found type {type(batchSize)}')
         assert (batchSize > 0), 'batchSize must be positive'
         assert (self.discriminatorStructure), ("Desriminator structure has " \
-                    "not been built. Try running 'self.build_discriminator()'.")
+                    "not been built. Try running 'self.initialize_models()'.")
         assert (self.generatorStructure), ("Generator structure has not been " \
-                                "built. Try running 'self.build_generator()'.")
+                            "built. Try running 'self.initialize_models()'.")
         assert (self.discriminatorCompiled), ("Discriminator model has not " \
-                "been compiled. Try running 'self.compile_discriminator()'.")
+                "been compiled. Try running 'self.initialize_models()'.")
         assert (self.adversarialCompiled), ("Adversarial model has not been " \
-                        "compiled. Try running 'self.compile_adversarial()'.")
+                        "compiled. Try running 'self.initialize_models()'.")
 
         # get number of examples in each dataset
         trainExampleNum = xTrain.shape[0]
