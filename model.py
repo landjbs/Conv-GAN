@@ -240,3 +240,7 @@ class GAN(object):
                                 metrics=['accuracy'])
         self.adversarialCompiled = adversarialModel
         return adversarialModel
+
+    def train_models(self, x, y):
+        """ """
+        
