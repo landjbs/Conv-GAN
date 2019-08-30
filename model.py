@@ -6,10 +6,11 @@ Implements base model class for deep convolutional adversarial network
 #     """ Helper to assert proper typing of function inputs """
 #     assert isinstance(obj, expectedType), f'{name} expected type {expectedType}, but found type {type{obj}}'
 
+from keras.models import Model, Sequential
+from keras.optimizers import RMSprop
 from keras.layers import (Input, Conv2D, Activation, LeakyReLU, Dropout,
                             Flatten, Dense, BatchNormalization, ReLU,
                             UpSampling2D, Conv2DTranspose, Reshape)
-from keras.models import Model
 
 import keras
 
@@ -27,7 +28,7 @@ class GAN(object):
         self.generatorStructure     =   None
         # compiled models
         self.discriminatorCompiled  =   None
-        self.generatorCompiled      =   None
+        self.adversarialCompiled    =   None
         ## model building params ##
         # default first-layer filter depth of discriminator
         DIS_DEPTH               =   64
@@ -215,6 +216,27 @@ class GAN(object):
     def compile_discriminator(self):
         """ Compiles discriminator model """
         if self.discriminatorCompiled:
-            raise self.ModelWarning("Discriminator has already been compiled.")
+            raise self.ModelWarning('Discriminator has already been compiled.')
             return discriminatorCompiled
-        
+        rmsOptimizer = RMSprop(lr=0.0002, decay=6e-8)
+        binaryLoss = 'binary_crossentropy'
+        discriminatorModel = self.discriminatorStructure
+        discriminatorModel.compile(optimizer=rmsOptimizer, loss=binaryLoss,
+                                metrics=['accuracy'])
+        self.discriminatorCompiled = discriminator
+        return discriminator
+
+    def compile_adversarial(self):
+        """ Compiles generator model """
+        if self.generatorCompiled:
+            raise self.ModelWarning('Generator has already been compiled.')
+        rmsOptimizer = RMSprop(lr=0.0001, decay=3e-8)
+        binaryLoss = 'binary_crossentropy'
+        # adversarial built by passing generator output through discriminator
+        adversarialModel = Sequential()
+        adversarialModel.add(self.discriminatorStructure)
+        adversarialModel.add(self.generatorStructure)
+        adversarialModel.compile(optimizer=rmsOptimizer, loss=binaryLoss,
+                                metrics=['accuracy'])
+        self.adversarialCompiled = adversarialModel
+        return adversarialModel
