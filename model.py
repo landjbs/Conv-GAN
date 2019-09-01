@@ -34,7 +34,7 @@ class DC_GAN(object):
         self.DIS_DEPTH          =   DIS_DEPTH
         self.GEN_DEPTH          =   DIS_DEPTH * 4
         # default dropout; should prevent memorization
-        self.DROPOUT            =   0.4
+        self.DROPOUT            =   0.2
         # default kernel size
         self.KERNEL_SIZE        =   5
         # default convolution stride length
@@ -69,7 +69,6 @@ class DC_GAN(object):
             dictFile.write(dumps(paramDict))
         print('Saved')
         return True
-
 
     def dis_get_filter_num(self, LAYER_COUNTER):
         """
@@ -317,8 +316,8 @@ class DC_GAN(object):
         return True
 
     def train_models(self, xTrain, yTrain, xVal=None, yVal=None, xTest=None,
-                    yTest=None, steps=2000, batchSize=200, saveInterval=500,
-                    outPath=None):
+                    yTest=None, trainSteps=2000, preSteps=5, batchSize=200,
+                    saveInterval=500, outPath=None):
         """
         Trains discriminator, generator, and adversarial model on x- and yTrain,
         validation on x- and yVal and evaluating final metrics on x- and yTest.
@@ -336,8 +335,11 @@ class DC_GAN(object):
                                         after training. Defaults to None.
             yTest (Optional):       Test labels to analyze model performance
                                         after training. Defaults to None.
-            steps (Optional):       Number of steps to take over the data during
-                                        model training. Defaults to 2000.
+            trainSteps (Optional):  Number of steps to take during model
+                                        training. Trains both the discriminator
+                                        and adversarial model. Defaults to 2000.
+            preSteps (Optional):    Number of steps to take during discriminator
+                                        pretraining. Defaults to 5.
             batchSize (Optional):   Number of examples over which to compute
                                         gradient during model training. Defaults
                                         to 200.
@@ -449,6 +451,18 @@ class DC_GAN(object):
         print(f'Training for {steps} steps on {trainExampleNum} examples ' \
             f'with batch size of {batchSize}.\nValidating on {valExampleNum} ' \
             'examples.')
+
+        # pretrain discriminator
+        for preStep in range(preSteps):
+            preFeatures, preTargets = batch_discriminator_data()
+            preData = self.discriminatorCompiled.train_on_batch(x=preFeatures,
+                                                                y=preTargets)
+            preLoss, preAcc = round(preData[0], 3), round(preData[1], 3)
+            valLoss, valAcc = round(valData[0], 3), round(valData[1], 3)
+            print(f'Pretraining: {preStep}\n' \
+                f'D [train loss: {preLoss} train acc: {preAcc} | ' \
+                f'val loss: {valLoss} val acc: {valAcc}')
+
         for curStep in range(steps):
             # train discriminator on valid and invalid images
             disFeatures, disTargets = batch_discriminator_data()
@@ -463,9 +477,9 @@ class DC_GAN(object):
             #     valData = self.discriminatorCompiled.evaluate(x=xVal, y=yVal,
             #                                                     verbose=False)
             valData = [0,0]
-            disLoss, disAcc = round(disData[0], 4), round(disData[1], 4)
-            valLoss, valAcc = round(valData[0], 4), round(valData[1], 4)
-            advLoss, advAcc = round(advData[0], 4), round(advData[1], 4)
+            disLoss, disAcc = round(disData[0], 3), round(disData[1], 3)
+            valLoss, valAcc = round(valData[0], 3), round(valData[1], 3)
+            advLoss, advAcc = round(advData[0], 3), round(advData[1], 3)
             print(f'Step: {curStep}\n' \
                 f'\tD [train loss: {disLoss} train acc: {disAcc} | ' \
                 f'val loss: {valLoss} val acc: {valAcc}]\n' \
