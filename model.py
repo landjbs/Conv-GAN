@@ -373,9 +373,9 @@ class DC_GAN(object):
                 shape_assertion(dataset_1, name_1)
                 length_assertion(dataset_1, dataset_2, name_1, name_2)
 
-        assert isinstance(steps, int), ('steps expected type int, but found' \
-                                                f'type {type(steps)}.')
-        assert (steps > 0), 'steps must be positive'
+        assert isinstance(trainSteps, int), ('trainSteps expected type int, ' \
+                                            f'but found type {type(steps)}.')
+        assert (trainSteps > 0), 'trainSteps must be positive'
         assert isinstance(batchSize, int), (f'batchSize expected type int, ' \
                                         'but found type {type(batchSize)}')
         assert (batchSize > 0), 'batchSize must be positive'
