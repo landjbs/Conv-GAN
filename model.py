@@ -374,8 +374,11 @@ class DC_GAN(object):
                 length_assertion(dataset_1, dataset_2, name_1, name_2)
 
         assert isinstance(trainSteps, int), ('trainSteps expected type int, ' \
-                                            f'but found type {type(steps)}.')
+                                            f'but found type ' \
+                                            '{type(trainSteps)}.')
         assert (trainSteps > 0), 'trainSteps must be positive'
+        assert (isinstance(preSteps, int) or (preSteps==None)), ('preSteps' \
+                f'expected type int or None, but found type {type(preSteps)}')
         assert isinstance(batchSize, int), (f'batchSize expected type int, ' \
                                         'but found type {type(batchSize)}')
         assert (batchSize > 0), 'batchSize must be positive'
@@ -448,22 +451,25 @@ class DC_GAN(object):
             targets = np.ones(shape=(batchSize,))
             return (noiseLatent, targets)
 
-        print(f'Training for {steps} steps on {trainExampleNum} examples ' \
-            f'with batch size of {batchSize}.\nValidating on {valExampleNum} ' \
-            'examples.')
+        print(f'Training for {trainSteps} steps on {trainExampleNum} ' \
+            f'examples with batch size of {batchSize}.\nValidating on ' \
+            f'{valExampleNum} examples.')
 
         # pretrain discriminator
-        for preStep in range(preSteps):
-            preFeatures, preTargets = batch_discriminator_data()
-            preData = self.discriminatorCompiled.train_on_batch(x=preFeatures,
-                                                                y=preTargets)
-            preLoss, preAcc = round(preData[0], 3), round(preData[1], 3)
-            valLoss, valAcc = round(valData[0], 3), round(valData[1], 3)
-            print(f'Pretraining: {preStep}\n' \
-                f'D [train loss: {preLoss} train acc: {preAcc} | ' \
-                f'val loss: {valLoss} val acc: {valAcc}')
+        if preSteps:
+            assert (preSteps > 0), 'preSteps must be a positive int.'
+            for preStep in range(preSteps):
+                preFeatures, preTargets = batch_discriminator_data()
+                preData = self.discriminatorCompiled.train_on_batch(x=preFeatures,
+                                                                    y=preTargets)
+                valData = [0,0]
+                preLoss, preAcc = round(preData[0], 3), round(preData[1], 3)
+                valLoss, valAcc = round(valData[0], 3), round(valData[1], 3)
+                print(f'Pretraining: {preStep}\n' \
+                    f'D [train loss: {preLoss} train acc: {preAcc} | ' \
+                    f'val loss: {valLoss} val acc: {valAcc}')
 
-        for curStep in range(steps):
+        for curStep in range(preSteps):
             # train discriminator on valid and invalid images
             disFeatures, disTargets = batch_discriminator_data()
             disData = self.discriminatorCompiled.train_on_batch(x=disFeatures,
