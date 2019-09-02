@@ -238,14 +238,12 @@ class DC_GAN(object):
         self.generatorStructure = generatorStructure
         return generatorStructure
 
-    def compile_discriminator(self, learningRate=0.0002, decay=6e-8,
-                            verbose=True):
+    def compile_discriminator(self, learningRate, decay, verbose=True):
         """
-        Compiles discriminator model
+        Compiles discriminator model.
         Args:
-            learningRate (Opt):     Learning rate of RMSProp optimizer. Defaults
-                                        to 0.0002.
-            decay (Opt):            Decay of RMSProp optimizer. Defaults to 6e-8.
+            learningRate (Opt):     Learning rate of RMSProp optimizer.
+            decay (Opt):            Decay of RMSProp optimizer.
             verbose (Opt):          Whether to print model summary.
         Returns:
             Compiled discriminator model.
@@ -263,15 +261,12 @@ class DC_GAN(object):
         self.discriminatorCompiled = discriminatorModel
         return discriminatorModel
 
-    def compile_adversarial(self, learningRate=0.0001, decay=3e-8,
-                            verbose=True):
+    def compile_adversarial(self, learningRate, decay, verbose=True):
         """
         Compiles generator model
         Args:
             learningRate (Opt):       Learning rate of RMSProp optimizer.
-                                        Defaults to 0.0001.
-            decay (Opt):              Decay of RMSProp optimizer. Defaults to
-                                        3e-8.
+            decay (Opt):              Decay of RMSProp optimizer.
             verbose (Opt):            Whether to print model summary.
         Returns:
             Compiled adversarial model.
@@ -291,12 +286,24 @@ class DC_GAN(object):
         self.adversarialCompiled = adversarialModel
         return adversarialModel
 
-    def initialize_models(self, verbose=True):
-        """ Initializes generator, discriminator, and adversarial """
+    def initialize_models(self, disLr=0.0002, disDecay=6e-8, advLr=0.0001,
+                        advDecay=3e-8, verbose=True):
+        """
+        Initializes generator, discriminator, and adversarial models
+        Args:
+            disLr (Opt):          Discriminator learning rate. Defaults
+                                    to 0.0002.
+            disDecay (Opt):       Discriminator decay. Defaults 6e-8.
+            advLr (Opt):          Adversarial learning rate. Defaults 0.0001.
+            advDecay (Opt):       Adversarial decay. Defaults 3e-8.
+            verbose (Opt):        Whether to print model summaries.
+        """
         _ = self.build_discriminator(verbose=False)
-        _ = self.build_generator(verbose=True)
-        _ = self.compile_discriminator(verbose=False)
-        _ = self.compile_adversarial(verbose=verbose)
+        _ = self.build_generator(verbose=verbose)
+        _ = self.compile_discriminator(learningRate=disLr, decay=disDecay,
+                                        verbose=False)
+        _ = self.compile_adversarial(learningRate=advLr, decay=advDecay,
+                                        verbose=verbose)
         return True
 
     def generate_images(self, n=1):
