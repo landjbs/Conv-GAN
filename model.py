@@ -238,12 +238,22 @@ class DC_GAN(object):
         self.generatorStructure = generatorStructure
         return generatorStructure
 
-    def compile_discriminator(self, verbose=True):
-        """ Compiles discriminator model """
+    def compile_discriminator(self, learningRate=0.0002, decay=6e-8,
+                            verbose=True):
+        """
+        Compiles discriminator model
+        Args:
+            learningRate (Opt):     Learning rate of RMSProp optimizer. Defaults
+                                        to 0.0002.
+            decay (Opt):            Decay of RMSProp optimizer. Defaults to 6e-8.
+            verbose (Opt):          Whether to print model summary.
+        Returns:
+            Compiled discriminator model.
+        """
         if self.discriminatorCompiled:
             raise self.ModelWarning('Discriminator has already been compiled.')
             return discriminatorCompiled
-        rmsOptimizer = RMSprop(lr=0.0002, decay=6e-8)
+        rmsOptimizer = RMSprop(lr=learningRate, decay=decay)
         binaryLoss = 'binary_crossentropy'
         discriminatorModel = self.discriminatorStructure
         discriminatorModel.compile(optimizer=rmsOptimizer, loss=binaryLoss,
@@ -253,11 +263,22 @@ class DC_GAN(object):
         self.discriminatorCompiled = discriminatorModel
         return discriminatorModel
 
-    def compile_adversarial(self, verbose=True):
-        """ Compiles generator model """
+    def compile_adversarial(self, learningRate=0.0001, decay=3e-8,
+                            verbose=True):
+        """
+        Compiles generator model
+        Args:
+            learningRate (Opt):       Learning rate of RMSProp optimizer.
+                                        Defaults to 0.0001.
+            decay (Opt):              Decay of RMSProp optimizer. Defaults to
+                                        3e-8.
+            verbose (Opt):            Whether to print model summary.
+        Returns:
+            Compiled adversarial model.
+        """
         if self.adversarialCompiled:
             raise self.ModelWarning('Adversarial has already been compiled.')
-        rmsOptimizer = RMSprop(lr=0.0001, decay=3e-8)
+        rmsOptimizer = RMSprop(lr=learningRate, decay=decay)
         binaryLoss = 'binary_crossentropy'
         # adversarial built by passing generator output through discriminator
         adversarialModel = Sequential()
@@ -493,7 +514,7 @@ class DC_GAN(object):
             # save at saveInterval benchmarks
             if (((curStep % saveInterval) == 0) and (curStep != 0)):
                 self.generate_and_plot(n=10, name=curStep, show=False,
-                                        outPath=f'training_data/{curStep}')
+                                        outPath=f'training_data2/{curStep}')
                 plt.close()
                 self.generatorStructure.save('training_data/' \
                                             f'generatorModel_{curStep}.h5')

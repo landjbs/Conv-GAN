@@ -22,5 +22,5 @@ yTest = mnistObj.test.labels
 mnistGAN = DC_GAN(name='mnist_gan', rowNum=28, columnNum=28, channelNum=1)
 mnistGAN.initialize_models(verbose=True)
 mnistGAN.train_models(xTrain=xTrain, yTrain=yTrain, xVal=xVal, yVal=yVal,
-    xTest=xTest, yTest=yTest, trainSteps=10000, batchSize=200, saveInterval=5,
-    outPath='outs')
+    xTest=xTest, yTest=yTest, trainSteps=10000, preSteps=8, batchSize=200,
+    saveInterval=5, outPath='outs')
