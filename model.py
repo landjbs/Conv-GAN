@@ -466,10 +466,10 @@ class DC_GAN(object):
                 preLoss, preAcc = round(preData[0], 3), round(preData[1], 3)
                 valLoss, valAcc = round(valData[0], 3), round(valData[1], 3)
                 print(f'Pretraining: {preStep}\n' \
-                    f'D [train loss: {preLoss} train acc: {preAcc} | ' \
+                    f'\tD [train loss: {preLoss} train acc: {preAcc} | ' \
                     f'val loss: {valLoss} val acc: {valAcc}')
 
-        for curStep in range(preSteps):
+        for curStep in range(trainSteps):
             # train discriminator on valid and invalid images
             disFeatures, disTargets = batch_discriminator_data()
             disData = self.discriminatorCompiled.train_on_batch(x=disFeatures,
@@ -494,6 +494,7 @@ class DC_GAN(object):
             if (((curStep % saveInterval) == 0) and (curStep != 0)):
                 self.generate_and_plot(n=10, name=curStep, show=False,
                                         outPath=f'training_data/{curStep}')
+                plt.close()
                 self.generatorStructure.save('training_data/' \
                                             f'generatorModel_{curStep}.h5')
 
@@ -507,7 +508,9 @@ class DC_GAN(object):
                 f'D [test loss: {testLoss} test acc: {testAcc}]')
 
         if outPath:
-            self.generatorStructure.save(outPath)
+            pass
+            # BUG: FIX SAVE ISSUES
+            # self.generatorStructure.save(outPath)
 
         return (self.generatorStructure, self.discriminatorCompiled,
                 self.adversarialCompiled)
