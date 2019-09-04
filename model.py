@@ -320,14 +320,11 @@ class DC_GAN(object):
         imageTensor = self.generatorStructure.predict(noiseVector)
         return imageTensor
 
-    def generate_and_plot(self, n, name, show=True, outPath=None):
-        """
-        Generates n image tensors and saves plots to outPath
-        """
-        imageTensor = self.generate_images(n)
+    def plot_image_tensor(self, imageTensor, show=True, outPath=None):
+        """ Plots image tensor """
         grayScale = self.channelNum == 1
         plt.figure(figsize=(10, 10))
-        for i, image in enumerate(imageTensor):
+        for imageNum, image in enumerate(imageTensor):
             plt.subplot(4, 4, i+1)
             if grayScale:
                 grayImage = image[:, :, 0]
@@ -343,6 +340,13 @@ class DC_GAN(object):
             plt.savefig(outPath)
         return True
 
+    def generate_and_plot(self, n, name, show=True, outPath=None):
+        """
+        Generates n image tensors and saves plots to outPath
+        """
+        imageTensor = self.generate_images(n)
+        self.plot_image_tensor(imageTensor, show=show, outPath=outPath)
+
     def interpolate(self, n):
         """
         Creates an interpolation of n steps through the latent dimensional
@@ -352,12 +356,18 @@ class DC_GAN(object):
         Returns:
             4th order tensor of
         """
-        MIN_BOUND = -1
-        MAX_BOUND = 1
-        stepSize = (MAX_BOUND - MIN_BOUND) / n
-        latentVec = np.tile([MIN_BOUND], reps=self.LATENT_DIMS)
-        for _ in range(n):
-            currentImage = 
+        MIN_BOUND = -1.0
+        MAX_BOUND = 1.0
+        stepSize = (MAX_BOUND - MIN_BOUND) / float(n)
+        latentVec = np.expand_dims(np.tile([MIN_BOUND], reps=self.LATENT_DIMS),
+                                    axis=0)
+
+
+        for step in range(n):
+            imageTensor = self.generatorStructure.predict(latentVec)
+            currentImage = imageTensor[0, :, :, 0]
+            latentVec[:] = (latentVec[0] + stepSize)
+
 
     def train_models(self, xTrain, yTrain, xVal=None, yVal=None, xTest=None,
                     yTest=None, trainSteps=2000, preSteps=5, batchSize=200,
