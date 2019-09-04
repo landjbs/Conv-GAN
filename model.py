@@ -343,6 +343,22 @@ class DC_GAN(object):
             plt.savefig(outPath)
         return True
 
+    def interpolate(self, n):
+        """
+        Creates an interpolation of n steps through the latent dimensional
+        initialization vectors of the generator model.
+        Args:
+            n:      How many steps across which to generate the interpolation
+        Returns:
+            4th order tensor of
+        """
+        MIN_BOUND = -1
+        MAX_BOUND = 1
+        stepSize = (MAX_BOUND - MIN_BOUND) / n
+        latentVec = np.tile([MIN_BOUND], reps=self.LATENT_DIMS)
+        for _ in range(n):
+            currentImage = 
+
     def train_models(self, xTrain, yTrain, xVal=None, yVal=None, xTest=None,
                     yTest=None, trainSteps=2000, preSteps=5, batchSize=200,
                     saveInterval=500, outPath=None):
@@ -521,7 +537,7 @@ class DC_GAN(object):
             # save at saveInterval benchmarks
             if (((curStep % saveInterval) == 0) and (curStep != 0)):
                 self.generate_and_plot(n=10, name=curStep, show=False,
-                                        outPath=f'training_data2/{curStep}')
+                                        outPath=f'training_data3/{curStep}')
                 plt.close()
                 self.generatorStructure.save('training_data/' \
                                             f'generatorModel_{curStep}.h5')
